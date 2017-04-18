@@ -18,7 +18,6 @@ BOOLEAN_SIZE = 1
 # 	f.close()
 
 
-print int('40    ')
 
 def search_memory_for_free(filename, size):
 	with open(filename, 'rb') as f:
@@ -29,13 +28,21 @@ def search_memory_for_free(filename, size):
 		while(not_eof):
 			f.seek(start)
 			data = f.read(end - start)
-			print data
-			if (data < FOUR_KILOBYTE):
+			size_of_data = len(data)
+			print 'size data'
+			print size_of_data
+			if (size_of_data < FOUR_KILOBYTE):
 				not_eof = False
-			while(start <= end):
-				clean = bool(data[BOOLEAN_SIZE])
-				allocated = int(data[BOOLEAN_SIZE: BOOLEAN_SIZE+ INT_SIZE])
-				if clean and allocated >= size:
+			while(start <= size_of_data):
+				print 'clean'
+				print data[start]
+
+				dirty = int(data[start])
+				
+				print data[start + BOOLEAN_SIZE: BOOLEAN_SIZE+ INT_SIZE]
+				allocated = int(data[start + BOOLEAN_SIZE: BOOLEAN_SIZE + INT_SIZE].rstrip('\0'))
+				print allocated
+				if (dirty == 0) and (allocated >= size):
 					return start
 				else:
 					start += allocated
@@ -46,22 +53,24 @@ def search_memory_for_free(filename, size):
 
 
 
-a = search_memory_for_free('asdf.d', 30)
-with open('asdf.d', 'wb') as f:
+a = search_memory_for_free('asdf.d', 100)
+print a
+with open('asdf.d', 'r+b') as f:
 	f.seek(a)
 	f.write('1')
 	f.seek(a+1)
-	f.write(bytes(30))
-	f.seek(a+INT_SIZE)
+	f.write(bytes(100))
+	f.seek(a+ BOOLEAN_SIZE+INT_SIZE)
 	f.write('asfsdfsadf')
-	f.close()
-a = search_memory_for_free('asdf.d', 30)
-with open('asdf.d', 'wb') as f:
-	f.seek(a)
-	f.write('1')
-	f.seek(a+1)
-	f.write(bytes(30))
-	f.close()
+# 	f.close()
+# a = search_memory_for_free('asdf.d', 30)
+# print a
+# with open('asdf.d', 'wb') as f:
+# 	f.seek(a)
+# 	f.write('1')
+# 	f.seek(a+1)
+# 	f.write(bytes(30))
+# 	f.close()
 
 
 
