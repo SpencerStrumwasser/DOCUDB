@@ -40,7 +40,7 @@ def search_memory_for_free(filename, size):
 				dirty = int(data[start])
 				
 				print data[start + BOOLEAN_SIZE: BOOLEAN_SIZE+ INT_SIZE]
-				allocated = int(data[start + BOOLEAN_SIZE: BOOLEAN_SIZE + INT_SIZE].rstrip('\0'))
+				allocated = int(data[start + BOOLEAN_SIZE: start + BOOLEAN_SIZE + INT_SIZE].rstrip('\0'))
 				print allocated
 				if (dirty == 0) and (allocated >= size):
 					return start
@@ -59,7 +59,7 @@ with open('asdf.d', 'r+b') as f:
 	f.seek(a)
 	f.write('1')
 	f.seek(a+1)
-	f.write(bytes(100))
+	f.write(bytesarray(100))
 	f.seek(a+ BOOLEAN_SIZE+INT_SIZE)
 	f.write('asfsdfsadf')
 # 	f.close()
