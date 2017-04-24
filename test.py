@@ -1,3 +1,5 @@
+# set block size
+
 import os
 
 
@@ -7,6 +9,8 @@ INT_SIZE = 8
 DOUBLE_SIZE = 16
 CHAR_SIZE = 1
 BOOLEAN_SIZE = 1
+
+
 
 
 

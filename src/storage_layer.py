@@ -1,3 +1,6 @@
+import os
+import document
+
 
 class StorageLayer:
     '''
@@ -60,20 +63,83 @@ class StorageLayer:
     CHAR_SIZE = 1
     BOOLEAN_SIZE = 1
 
-    ROOT_DIRECTORY = 
+    ROOT_DATA_DIRECTORY = '/Users/ethanlo1/Documents/15th/3rd Term/CS123/DOCUDB/table_data' # Where the tables at
 
-    def __init__(self, ):
+    def __init__(self, filename, read_size=4069):
         '''
-        
+        Filename is identical to collection name
         '''
-    
-        # set block/read size
-        self.read_size = 4096
-
-        
+        self.read_size = read_size
+        self.filename = filename
 
 
-        
+    def search_memory_for_free(self, size):
+        with open(self.filename, 'rb') as f:
+            start = 0
+            end = start + self.read_size
+            #check if file has anything written
+            not_eof = (os.stat(self.filename).st_size != 0) 
+            while(not_eof):
+                f.seek(start)
+                #load a subset of data
+                data = f.read(end - start)
+                size_of_data = len(data)
+                #check if last loop
+                if (size_of_data < self.read_size):
+                    not_eof = False
+                # go through "block" of data    
+                while(start <= size_of_data):
+
+                    dirty = int(data[start])
+                    allocated = int(data[start + self.BOOLEAN_SIZE: start + self.BOOLEAN_SIZE + self.INT_SIZE].rstrip('\0'))
+                    if (dirty == 0) and (allocated >= size):
+                        return start
+                    else:
+                        start += allocated
+                end = start + self.read_size
+            return start
+
+
+
+    def write_data_to_memory(self, start, document):
+        with open(self.filename, 'r+b') as f:
+            f.seek(start)
+            # show it has not been "deleted"
+            f.write('1')
+            start += self.BOOLEAN_SIZE
+            f.seek(start)
+            # write how much is allocated
+            f.write(bytes(document.allocated_size))
+            start += self.INT_SIZE
+            f.seek(start)
+            # write how much is being used
+            f.write(bytes(document.filled_size))
+            start += self.INT_SIZE
+
+            values = document.values
+            for key in values:
+                # write column name lenght
+                f.seek(start)
+                f.write(bytes(values[key].col_name_len))
+                start += 1
+                # write column name
+                f.seek(start)
+                f.write(key)
+                start += values[key].col_name_len
+                # write value type
+                f.seek(start)
+                f.write(values[key].val_type)
+                start += 1
+                # write value size
+                f.seek(start)
+                f.write(bytes(values[key].val_size))
+                start += self.INT_SIZE
+                # write value
+                f.seek(start)
+                f.write(bytes(values[key].val))
+                start += values[key].val_size
+        # return true to make sure it works
+        return True 
 
 
 
@@ -82,4 +148,6 @@ class StorageLayer:
 
 
 
-        
+
+
+            
