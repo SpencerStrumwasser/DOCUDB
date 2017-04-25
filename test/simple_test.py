@@ -49,7 +49,10 @@ print 'TESTING GET'
 gettt = sl.get_tuples_by_key(['goodbye'])
 
 print 'HHHHHHHHHHHNNGGGG'
-print gettt[0].values
+dicc =  gettt[0].values
+print dicc
+for key in dicc:
+	print dicc[key]
 
 
 with open(filename, 'rb') as f:

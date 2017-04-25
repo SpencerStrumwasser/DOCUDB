@@ -18,6 +18,9 @@ class DocumentData:
 			self.val_size = val_size
 			self.val = val
 
+		def __str__(self):
+			return 'col_name_len: ' + str(self.col_name_len) + ', val_type: ' + str(self.val_type) + ', val_size: ' + str(self.val_size) + ', val: ' + str(self.val)
+
 	def __init__(self, allocated_size, filled_size, key_name):
 		self.allocated_size = allocated_size
 		self.filled_size = filled_size
