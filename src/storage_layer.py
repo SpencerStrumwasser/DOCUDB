@@ -58,8 +58,8 @@ class StorageLayer:
 
     '''
 
-    INT_SIZE = 8    
-    DEC_SIZE = 16
+    INT_SIZE = 4    
+    DEC_SIZE = 8
     CHAR_SIZE = 1
     BOOLEAN_SIZE = 1
     Val_type_map = {0 : 'int' , 1 : 'dec', 2 : 'char', 3 : 'bool'}
@@ -173,6 +173,73 @@ class StorageLayer:
                             keys.remove(datakey)
                             f.seek(start)
                             f.write('0')
+                    if len(keys) == 0:
+                        return True
+                    start +=allocated
+            return False
+
+
+
+    def update_by_keys(self, keys, columns, news):
+        with open(self.filename, 'r+b') as f:
+            start = 0
+            end = start + self.read_size
+            #check if file has anything written
+            not_eof = True
+            if (os.stat(self.filename).st_size == 0):
+                return False
+            while not_eof:
+                f.seek(start)
+                data = f.read(end - start)
+                size_of_data = len(data)
+                if (size_of_data < self.read_size):
+                    not_eof = False
+                while start <= size_of_data:
+                    dirty = int(data[start])
+                    allocated = int(data[start + self.BOOLEAN_SIZE: start + self.BOOLEAN_SIZE + self.INT_SIZE].rstrip('\0'))
+                    if dirty == 1:
+                        datakey = data[start + self.BOOLEAN_SIZE + 2 * self.INT_SIZE:start + self.BOOLEAN_SIZE + 2 * self.INT_SIZE + 30].rstrip('\0')
+                        if datakey in keys:
+                            traversal = start + self.BOOLEAN_SIZE + 2 * self.INT_SIZE + 30
+                            keys.remove(datakey)
+                            f.seek(traversal)
+                            copy_columns = columns
+                            copy_news = news
+                            while len(copy_columns) != 0:
+                                col_len = f.read(1)
+                                traversal += 1
+                                print 'safd' + col_len
+                                if col_len == '\0' :
+                                    break
+                                col_name = f.read(int(col_len))
+                                traversal += int(col_len)
+                                f.seek(traversal + 1)
+                                val_size = int(f.read(self.INT_SIZE).rstrip('\0'))
+                                traversal += 1 + self.INT_SIZE
+                                for i in range(0, len(copy_columns)):
+                                    if col_name == copy_columns[i]:
+                                        f.write(bytearray(val_size))
+                                        f.seek(traversal)
+                                        f.write(bytes(copy_news[i]))
+                                        copy_columns.remove(col_name)
+                                        del copy_news[i]
+
+                                        break
+                                traversal += val_size
+                                f.seek(traversal)
+                                        
+                            if len(copy_columns) != 0:
+                                print 'seeerrrrr'
+                                f.seek(traversal)
+                                for i in range(0, len(copy_columns)):
+                                    temp_len = len(copy_columns[i])
+                                    f.write(bytes(temp_len))
+                                    f.write(copy_columns[i])
+                                    f.write('0')
+                                    f.write(bytes(len(copy_news[i])))
+                                    traversal += 1 + temp_len + 1 + 4
+                                    f.seek(traversal)
+                                    f.write(bytes(copy_news[i]))
                     if len(keys) == 0:
                         return True
                     start +=allocated

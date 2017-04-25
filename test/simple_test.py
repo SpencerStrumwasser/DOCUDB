@@ -40,7 +40,7 @@ with open(filename, 'rb') as f:
 
 	print fff
 
-
+sl.update_by_keys(['goodbye'], ['col', 'hiithere'], [90, '100'])
 sl.delete_by_keys(['goodbye'])
 
 with open(filename, 'rb') as f:
