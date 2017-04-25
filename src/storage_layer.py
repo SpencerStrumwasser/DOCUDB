@@ -11,7 +11,7 @@ class StorageLayer:
         | metadata | row data | extra padding |
 
         The meta data is structured as follows:
-        | 1B - filled flag | 4B - space allocated for row | 4B - space filled in row | 
+        | 1B - filled flag | 4B - space allocated for row | 4B - space filled in row | 30B key_name|
 
         The row data is structured as follows (this is one row):
         | 1B - col name length | 1~255B - col name | 1B - value type | 4B - value size| ?B - value|
@@ -62,8 +62,8 @@ class StorageLayer:
     DEC_SIZE = 16
     CHAR_SIZE = 1
     BOOLEAN_SIZE = 1
-
-    ROOT_DATA_DIRECTORY = '/Users/ethanlo1/Documents/15th/3rd Term/CS123/DOCUDB/table_data' # Where the tables at
+    Val_type_map = {0 : 'int' , 1 : 'dec', 2 : 'char', 3 : 'bool'}
+    ROOT_DATA_DIRECTORY = '/Users/Spencer/CS123/DOCUDB/table_data' # Where the tables at
 
     def __init__(self, filename, read_size=4069):
         '''
@@ -105,6 +105,8 @@ class StorageLayer:
         with open(self.filename, 'r+b') as f:
             f.seek(start)
             # show it has not been "deleted"
+            f.write(bytearray(document.allocated_size - 1))
+            f.seek(start)
             f.write('1')
             start += self.BOOLEAN_SIZE
             f.seek(start)
@@ -115,6 +117,11 @@ class StorageLayer:
             # write how much is being used
             f.write(bytes(document.filled_size))
             start += self.INT_SIZE
+
+            # document key is part of meta data
+            f.seek(start)
+            f.write(document.key_name)
+            start += 30
 
             values = document.values
             for key in values:
@@ -128,7 +135,7 @@ class StorageLayer:
                 start += values[key].col_name_len
                 # write value type
                 f.seek(start)
-                f.write(values[key].val_type)
+                f.write(bytes(values[key].val_type))
                 start += 1
                 # write value size
                 f.seek(start)
@@ -143,7 +150,33 @@ class StorageLayer:
 
 
 
-
+    def delete_by_keys(self, keys):
+        with open(self.filename, 'r+b') as f:
+            start = 0
+            end = start + self.read_size
+            #check if file has anything written
+            not_eof = True
+            if (os.stat(self.filename).st_size == 0):
+                return False
+            while not_eof:
+                f.seek(start)
+                data = f.read(end - start)
+                size_of_data = len(data)
+                if (size_of_data < self.read_size):
+                    not_eof = False
+                while start <= size_of_data:
+                    dirty = int(data[start])
+                    allocated = int(data[start + self.BOOLEAN_SIZE: start + self.BOOLEAN_SIZE + self.INT_SIZE].rstrip('\0'))
+                    if dirty == 1:
+                        datakey = data[start + self.BOOLEAN_SIZE + 2 * self.INT_SIZE:start + self.BOOLEAN_SIZE + 2 * self.INT_SIZE + 30].rstrip('\0')
+                        if datakey in keys:
+                            keys.remove(datakey)
+                            f.seek(start)
+                            f.write('0')
+                    if len(keys) == 0:
+                        return True
+                    start +=allocated
+            return False
 
 
 
