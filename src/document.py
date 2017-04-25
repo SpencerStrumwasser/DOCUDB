@@ -5,7 +5,7 @@ class DocumentData:
 	Represents how the document is being stored in the database. Stores both 
 	document data and metadata.
 
-	| 1B - filled flag | 4B - space allocated for row | 4B - space filled in row | 
+	| 1B - filled flag | 4B - space allocated for row | 4B - space filled in row | 30B - Key_name|
 	| 1B - col name length | 1~255B - col name | 1B - value type | 4B - value size| ?B - value|
 	'''
 
@@ -19,9 +19,10 @@ class DocumentData:
 			self.val_size = val_size
 			self.val = val
 
-	def __init__(self, allocated_size, filled_size):
+	def __init__(self, allocated_size, filled_size, key_name):
 		self.allocated_size = allocated_size
 		self.filled_size = filled_size
+		self.key_name = key_name
 		self.values = {}
 
 	def add_value(self, col_name, col_name_len, val_type, val_size, val):
