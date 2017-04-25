@@ -1,5 +1,4 @@
 
-
 class DocumentData:
 	'''
 	Represents how the document is being stored in the database. Stores both 
@@ -27,3 +26,24 @@ class DocumentData:
 
 	def add_value(self, col_name, col_name_len, val_type, val_size, val):
 		self.values[col_name] = self.ValueData(col_name_len, val_type, val_size, val)
+
+
+class DocumentPresentation:
+	'''
+	Document that is presented to user. Does not include storage level data.
+	'''
+
+	def __init__(self, key):
+		self.key = key
+		self.values = {}
+
+
+	def add_value(self, col_name, value):
+		self.values[col_name] = value
+
+
+	def alter_order():
+		raise NotImplementedError('implement later')
+
+
+
