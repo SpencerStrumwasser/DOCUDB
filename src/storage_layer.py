@@ -11,7 +11,7 @@ class StorageLayer:
         | metadata | row data | extra padding |
 
         The meta data is structured as follows:
-        | 1B - filled flag | 4B - space allocated for row | 4B - space filled in row | 
+        | 1B - filled flag | 4B - space allocated for row | 4B - space filled in row | 30B key_name|
 
         The row data is structured as follows (this is one row):
         | 1B - col name length | 1~255B - col name | 1B - value type | 4B - value size| ?B - value|
@@ -58,12 +58,12 @@ class StorageLayer:
 
     '''
 
-    INT_SIZE = 8    
-    DEC_SIZE = 16
+    INT_SIZE = 4    
+    DEC_SIZE = 8
     CHAR_SIZE = 1
     BOOLEAN_SIZE = 1
-
-    ROOT_DATA_DIRECTORY = '/Users/ethanlo1/Documents/15th/3rd Term/CS123/DOCUDB/table_data' # Where the tables at
+    VAL_TYPE_MAP = {0 : 'int' , 1 : 'dec', 2 : 'char', 3 : 'bool'}
+    ROOT_DATA_DIRECTORY = '/Users/Spencer/CS123/DOCUDB/table_data' # Where the tables at
 
     def __init__(self, filename, read_size=4069):
         '''
@@ -74,6 +74,12 @@ class StorageLayer:
 
 
     def search_memory_for_free(self, size):
+        '''
+        TODO: method summary
+
+        input: size ->
+        return ->
+        '''
         with open(self.filename, 'rb') as f:
             start = 0
             end = start + self.read_size
@@ -102,9 +108,21 @@ class StorageLayer:
 
 
     def write_data_to_memory(self, start, document):
+        '''
+        todo: method summary
+
+        input: start ->
+        input document ->
+        return ->
+        '''
+
+        # todo: record filled_space
+
         with open(self.filename, 'r+b') as f:
             f.seek(start)
             # show it has not been "deleted"
+            f.write(bytearray(document.allocated_size - 1))
+            f.seek(start)
             f.write('1')
             start += self.BOOLEAN_SIZE
             f.seek(start)
@@ -115,6 +133,11 @@ class StorageLayer:
             # write how much is being used
             f.write(bytes(document.filled_size))
             start += self.INT_SIZE
+
+            # document key is part of meta data
+            f.seek(start)
+            f.write(document.key_name)
+            start += 30
 
             values = document.values
             for key in values:
@@ -128,7 +151,7 @@ class StorageLayer:
                 start += values[key].col_name_len
                 # write value type
                 f.seek(start)
-                f.write(values[key].val_type)
+                f.write(bytes(values[key].val_type))
                 start += 1
                 # write value size
                 f.seek(start)
@@ -143,11 +166,147 @@ class StorageLayer:
 
 
 
+    def delete_by_keys(self, keys):
+        '''
+        todo: write methdo summary
+
+        input: keys ->
+        return ->
+
+        '''
+        with open(self.filename, 'r+b') as f:
+            start = 0
+            end = start + self.read_size
+            #check if file has anything written
+            not_eof = True
+            if (os.stat(self.filename).st_size == 0):
+                return False
+            while not_eof:
+                f.seek(start)
+                data = f.read(end - start)
+                size_of_data = len(data)
+                if (size_of_data < self.read_size):
+                    not_eof = False
+                while start <= size_of_data:
+                    dirty = int(data[start])
+                    allocated = int(data[start + self.BOOLEAN_SIZE: start + self.BOOLEAN_SIZE + self.INT_SIZE].rstrip('\0'))
+                    if dirty == 1:
+                        datakey = data[start + self.BOOLEAN_SIZE + 2 * self.INT_SIZE:start + self.BOOLEAN_SIZE + 2 * self.INT_SIZE + 30].rstrip('\0')
+                        if datakey in keys:
+                            keys.remove(datakey)
+                            f.seek(start)
+                            f.write('0')
+                    if len(keys) == 0:
+                        return True
+                    start +=allocated
+            return False
+
+
+    def get_tuples_by_key(self, keys, project=[]):
+        '''
+        Gets the documents corresponding to the desired keys. With optional projection
+        
+        input: keys -> List of keys to grab documents for 
+        input: project -> List of columns to project. Empty list means select all
+        return ->
+
+        '''
+        ret = [] # document.DocumentPresentation(key)
+
+        with open(self.filename, 'rb') as f:
+            start = 0
+            end = start + self.read_size
+            #check if file has anything written
+            not_eof = True
+            if (os.stat(self.filename).st_size == 0):
+                return False
+            while not_eof:
+                f.seek(start)
+                data = f.read(end - start)
+                size_of_data = len(data)
+                if (size_of_data < self.read_size):
+                    not_eof = False
+                while start <= size_of_data:
+                    dirty = int(data[start])
+                    allocated = int(data[start + self.BOOLEAN_SIZE: start + self.BOOLEAN_SIZE + self.INT_SIZE].rstrip('\0'))
+                    if dirty == 1:
+                        datakey = data[start + self.BOOLEAN_SIZE + 2 * self.INT_SIZE:start + self.BOOLEAN_SIZE + 2 * self.INT_SIZE + 30].rstrip('\0')
+                        if datakey in keys:
+                            # keys.remove(datakey)
+                            f.seek(start)
+                            document_binary = f.read(allocated)
+                            doc_data = self.binary_to_doc_data(document_binary)
+                            ret.append(doc_data)
+                    if len(keys) == 0:
+                        return []
+                    start +=allocated
+            return ret
+
+
+    def binary_to_doc_data(self, binary):
+        # TODO: update when we store datatypes 
+        # as NOT alll strings
+
+        # print '--------'
+        # print binary
+        # print '--------'
+
+        # TODO: .rstrip('\0') will not be neccesary once data is stored in 
+        # binary format
+
+        is_filled = bool(binary[0])
+        allocated = int(str(binary[1:5]).rstrip('\0'))
+        filled = int(str(binary[5:9]).rstrip('\0'))
+        key_name = str(binary[9:39]).rstrip('\0')
+
+        print 'is_filled: ' , is_filled
+        print 'allocated: ' , allocated
+        print 'filled: ' , filled
+        print 'key_name: ' , key_name
+
+
+        ret = document.DocumentData(allocated, filled, key_name)
+
+# | 1B - col name length | 1~255B - col name | 1B - value type | 4B - value size| ?B - value|
+
+        print binary
+        print 'start data'
+
+        i = 39
+        while(i < len(binary)):
+            if binary[i] == '\0':
+                break
+
+            col_name_len = int(binary[i].rstrip('\0'))
+            i += 1
+            col_name = binary[i:i+col_name_len]
+            i += col_name_len
+            val_type = int(binary[i].rstrip('\0'))
+            i += 1
+            val_size = int(binary[i:i+4].rstrip('\0'))
+            i += 4
+            value = binary[i:i+val_size].rstrip('\0')
+            i += val_size
+
+            ret.add_value(col_name, col_name_len, val_type, val_size, value)
+
+
+            print 'col_name_len: ' , col_name_len
+            print 'col_name: ' , col_name
+            print 'val_type: ' , val_type
+            print 'val_size: ' , val_size
+            print 'value: ' , value
 
 
 
+        return ret
 
 
+        
+
+        
 
 
+        # TODO: write functino to convert all datatypes for correct
+        # storage
             
