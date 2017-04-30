@@ -30,6 +30,7 @@ to_insert2 = DocumentData(1000, 0, 'goodbye')
 to_insert2.add_value('col1', 4, 2, 7 , 'asdfasf')
 to_insert2.add_value('col', 3, 0, 4 , 10)
 
+ #110000goodbye3col04904col127asdfasf8hiithere03100
 
 
 sl.write_data_to_memory(sl.search_memory_for_free(1000), to_insert)
@@ -60,8 +61,32 @@ with open(filename, 'rb') as f:
 
 	print fff
 
+sl.update_by_keys(['goodbye'], ['col', 'hiithere'], [90, '100'])
+ #110000goodbye3col04904col127asdfasf8hiithere03100
+
+
+print 'TESTING GET after update'
+gettt = sl.get_tuples_by_key(['goodbye'])
+
+print 'HHHHHHHHHHHNNGGGG'
+dicc =  gettt[0].values
+print dicc
+for key in dicc:
+	print dicc[key]
+
 
 sl.delete_by_keys(['goodbye'])
+
+print 'TESTING GET after delere'
+# gettt = sl.get_tuples_by_key(['goodbye'])
+
+# print 'HHHHHHHHHHHNNGGGG'
+# dicc =  gettt[0].values
+# print dicc
+# for key in dicc:
+# 	print dicc[key]
+
+
 
 with open(filename, 'rb') as f:
 	fff = f.read()
