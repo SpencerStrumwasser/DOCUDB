@@ -78,6 +78,16 @@ class StorageLayer:
         self.filename = filename
 
 
+    def byte_to_int(self, byte):
+        
+        ret = ''
+        for k in range(0,4):
+           ret += bin(ord(byte[k]))[2:]
+        ret = int(ret,2)
+        return ret
+
+
+
     def search_memory_for_free(self, size):
         '''
         TODO: method summary
@@ -95,21 +105,73 @@ class StorageLayer:
                 #load a subset of data
                 data = f.read(end - start)
                 size_of_data = len(data)
+
                 #check if last loop
+                if size_of_data == 0:
+                    return start
                 if (size_of_data < self.read_size):
                     not_eof = False
-                # go through "block" of data    
-                while(start <= size_of_data):
+                # go through "block" of data  
+                init_start = start  
+                data_start = 0
+                while start <= init_start + size_of_data:
 
-                    dirty = int(data[start])
-                    allocated = int(data[start + self.BOOLEAN_SIZE: start + self.BOOLEAN_SIZE + self.INT_SIZE].rstrip('\0'))
+                    dirty = int(data[data_start])
+                    allocated_temp = data[data_start + self.BOOLEAN_SIZE: data_start + self.BOOLEAN_SIZE + self.INT_SIZE]
+                    allocated = self.byte_to_int(allocated_temp)
+
                     if (dirty == 0) and (allocated >= size):
                         return start
                     else:
+                        data_start += allocated
                         start += allocated
                 end = start + self.read_size
             return start
 
+
+    def convert_int(self,number):
+        a = bin(number)[2:]
+        b = len(a)
+        first = 0
+        second = 0
+        third = 0
+        fourth = 0
+
+        if(b <= 8):
+            first = int(a[0:b],2)
+            return first,second,third,fourth
+        else:
+            first = int(a[b-8:b],2)
+            
+        b = b-8
+        if(b <= 8):
+            second = int(a[0:b],2)
+            return first,second,third,fourth
+        else:
+            second = int(a[b-8:b],2)
+        b = b-8
+        if(b <= 8):
+            third = int(a[0:b],2)
+            return first,second,third,fourth
+        else:
+            third = int(a[b-8:b],2)
+        b = b-8
+        if(b <= 8):
+            fourth = int(a[0:b],2)
+
+        else:
+            fourth = int(a[b-8:b],2)    
+        return first,second,third,fourth
+
+
+
+    def convert_single_byte(self,number):
+        a = bin(number)[2:]
+        b = len(a)
+        first = 0
+        if(b < 8):
+            first = int(a[0:b],2)
+        return first
 
 
     def write_data_to_memory(self, start, document):
@@ -122,7 +184,7 @@ class StorageLayer:
         '''
 
         # todo: record filled_space
-
+        init_start = start
         with open(self.filename, 'r+b') as f:
             f.seek(start)
             # show it has not been "deleted"
@@ -132,11 +194,15 @@ class StorageLayer:
             start += self.BOOLEAN_SIZE
             f.seek(start)
             # write how much is allocated
-            f.write(bytes(document.allocated_size))
+
+            a,b,c,d = self.convert_int(document.allocated_size)
+
+            f.write(str(chr(d)))
+            f.write(str(chr(c)))
+            f.write(str(chr(b)))
+            f.write(str(chr(a)))
             start += self.INT_SIZE
-            f.seek(start)
-            # write how much is being used
-            f.write(bytes(document.filled_size))
+            filled_loc = start
             start += self.INT_SIZE
 
             # document key is part of meta data
@@ -148,7 +214,8 @@ class StorageLayer:
             for key in values:
                 # write column name lenght
                 f.seek(start)
-                f.write(bytes(values[key].col_name_len))
+                a = self.convert_single_byte(values[key].col_name_len)
+                f.write(str(chr(a)))
                 start += 1
                 # write column name
                 f.seek(start)
@@ -156,16 +223,42 @@ class StorageLayer:
                 start += values[key].col_name_len
                 # write value type
                 f.seek(start)
-                f.write(bytes(values[key].val_type))
+                a = self.convert_single_byte(values[key].val_type)
+                f.write(str(chr(a)))
                 start += 1
                 # write value size
                 f.seek(start)
-                f.write(bytes(values[key].val_size))
+                a,b,c,d = self.convert_int(values[key].val_size)
+
+                f.write(str(chr(d)))
+                f.write(str(chr(c)))
+                f.write(str(chr(b)))
+                f.write(str(chr(a)))
                 start += self.INT_SIZE
                 # write value
                 f.seek(start)
-                f.write(bytes(values[key].val))
-                start += values[key].val_size
+                if values[key].val_type == 0:
+                    a,b,c,d = self.convert_int(values[key].val)
+
+                    f.write(str(chr(d)))
+                    f.write(str(chr(c)))
+                    f.write(str(chr(b)))
+                    f.write(str(chr(a)))
+                    start += values[key].val_size
+                        
+                else:
+                    f.write(bytes(values[key].val))
+                    start += values[key].val_size
+        
+            f.seek(filled_loc)
+            # write how much is being used
+
+            a,b,c,d = self.convert_int(start - init_start)
+
+            f.write(str(chr(d)))
+            f.write(str(chr(c)))
+            f.write(str(chr(b)))
+            f.write(str(chr(a)))
         # return true to make sure it works
         return True 
 
@@ -192,17 +285,21 @@ class StorageLayer:
                 size_of_data = len(data)
                 if (size_of_data < self.read_size):
                     not_eof = False
-                while start <= size_of_data:
-                    dirty = int(data[start])
-                    allocated = int(data[start + self.BOOLEAN_SIZE: start + self.BOOLEAN_SIZE + self.INT_SIZE].rstrip('\0'))
+                init_start = start  
+                data_start = 0
+                while start <= init_start + size_of_data:
+                    dirty = int(data[data_start])
+                    allocated_temp = data[data_start + self.BOOLEAN_SIZE: data_start + self.BOOLEAN_SIZE + self.INT_SIZE]
+                    allocated = self.byte_to_int(allocated_temp)
                     if dirty == 1:
-                        datakey = data[start + self.BOOLEAN_SIZE + 2 * self.INT_SIZE:start + self.BOOLEAN_SIZE + 2 * self.INT_SIZE + 30].rstrip('\0')
+                        datakey = data[data_start + self.BOOLEAN_SIZE + 2 * self.INT_SIZE:data_start + self.BOOLEAN_SIZE + 2 * self.INT_SIZE + 30].rstrip('\0')
                         if datakey in keys:
                             keys.remove(datakey)
                             f.seek(start)
                             f.write('0')
                     if len(keys) == 0:
                         return True
+                    data_start += allocated
                     start +=allocated
             return False
 
@@ -229,33 +326,36 @@ class StorageLayer:
                 f.seek(start)
                 data = f.read(end - start)
                 size_of_data = len(data)
+
                 if (size_of_data < self.read_size):
                     not_eof = False
-                while start < size_of_data:
-                    print 'about to fucke up'
-                    print data[start]
+                init_start = start
+                data_start = 0  
+                while start <= init_start + size_of_data:
 
-                    if data[start] == '\0':
-                        print start
+
+                    if data[data_start] == '\0':
+
                         dirty = 0
                     else:   
-                        dirty = int(data[start])
+                        dirty = int(data[data_start])
 
 
-
-                    allocated = int(data[start + self.BOOLEAN_SIZE: start + self.BOOLEAN_SIZE + self.INT_SIZE].rstrip('\0'))
+                    allocated_temp = data[data_start + self.BOOLEAN_SIZE: data_start + self.BOOLEAN_SIZE + self.INT_SIZE]
+                    allocated = self.byte_to_int(allocated_temp)
                     if dirty == 1:
-                        datakey = data[start + self.BOOLEAN_SIZE + 2 * self.INT_SIZE:start + self.BOOLEAN_SIZE + 2 * self.INT_SIZE + 30].rstrip('\0')
+                        datakey = data[data_start + self.BOOLEAN_SIZE + 2 * self.INT_SIZE:data_start + self.BOOLEAN_SIZE + 2 * self.INT_SIZE + 30].rstrip('\0')
                         if datakey in keys:
                             keys.remove(datakey)
-                            f.seek(start)
-                            document_binary = data[start:start+allocated]
+                            
+                            document_binary = data[data_start:data_start+allocated]
                             doc_data = self.binary_to_doc_data(document_binary)
                             ret.append(doc_data)
 
                     if len(keys) == 0:
                         return ret
-                    start +=allocated
+                    data_start += allocated
+                    start += allocated
             return ret
 
 
@@ -271,8 +371,10 @@ class StorageLayer:
         # binary format
 
         is_filled = bool(binary[0])
-        allocated = int(str(binary[1:5]).rstrip('\0'))
-        filled = int(str(binary[5:9]).rstrip('\0'))
+        allocated_temp = binary[1:5]
+        allocated = self.byte_to_int(allocated_temp)
+        filled_temp = binary[5:9]
+        filled = self.byte_to_int(filled_temp)
         key_name = str(binary[9:39]).rstrip('\0')
 
         print 'is_filled: ' , is_filled
@@ -285,7 +387,7 @@ class StorageLayer:
 
 # | 1B - col name length | 1~255B - col name | 1B - value type | 4B - value size| ?B - value|
 
-        print binary
+        # print binary
         print 'start data'
 
         i = 39
@@ -293,16 +395,22 @@ class StorageLayer:
             if binary[i] == '\0':
                 break
 
-            col_name_len = int(binary[i].rstrip('\0'))
+            col_name_len = int(bin(ord(binary[i])),2)
             i += 1
             col_name = binary[i:i+col_name_len]
             i += col_name_len
-            val_type = int(binary[i].rstrip('\0'))
+            val_type = int(bin(ord(binary[i])),2)
             i += 1
-            val_size = int(binary[i:i+4].rstrip('\0'))
+            val_size = self.byte_to_int(binary[i:i+4])
             i += 4
-            value = binary[i:i+val_size].rstrip('\0')
-            i += val_size
+
+            if(val_type == 0):
+
+                value = self.byte_to_int(binary[i:i+val_size])
+                i += val_size
+            else:
+                value = binary[i:i+val_size].rstrip('\0')
+                i += val_size
 
             ret.add_value(col_name, col_name_len, val_type, val_size, value)
 
@@ -318,7 +426,7 @@ class StorageLayer:
         return ret
 
 
-    def update_by_keys(self, keys, columns, news):
+    def update_by_keys(self, keys, columns, news, insert_flag):
         with open(self.filename, 'r+b') as f:
             start = 0
             end = start + self.read_size
@@ -332,33 +440,52 @@ class StorageLayer:
                 size_of_data = len(data)
                 if (size_of_data < self.read_size):
                     not_eof = False
-                while start <= size_of_data:
-                    dirty = int(data[start])
-                    allocated = int(data[start + self.BOOLEAN_SIZE: start + self.BOOLEAN_SIZE + self.INT_SIZE].rstrip('\0'))
+                init_start = start  
+                data_start = 0
+                while start <= init_start + size_of_data:
+
+                    dirty = int(data[data_start])
+                    allocated_temp = data[data_start + self.BOOLEAN_SIZE: data_start + self.BOOLEAN_SIZE + self.INT_SIZE]
+                    allocated = self.byte_to_int(allocated_temp)                    
                     if dirty == 1:
-                        datakey = data[start + self.BOOLEAN_SIZE + 2 * self.INT_SIZE:start + self.BOOLEAN_SIZE + 2 * self.INT_SIZE + 30].rstrip('\0')
+                        datakey = data[data_start + self.BOOLEAN_SIZE + 2 * self.INT_SIZE:data_start + self.BOOLEAN_SIZE + 2 * self.INT_SIZE + 30].rstrip('\0')
                         if datakey in keys:
                             traversal = start + self.BOOLEAN_SIZE + 2 * self.INT_SIZE + 30
                             keys.remove(datakey)
                             f.seek(traversal)
+                            filled_loc = start + self.BOOLEAN_SIZE + self.INT_SIZE
+                            filled_start = start
                             copy_columns = columns
                             copy_news = news
                             while len(copy_columns) != 0:
                                 col_len = f.read(1)
-                                print 'safd' + col_len
+                                                             
                                 if col_len == '\0' :
                                     break
+                                col_len = int(bin(ord(col_len)),2)
                                 traversal += 1
-                                col_name = f.read(int(col_len))
-                                traversal += int(col_len)
+                                col_name = f.read(col_len)
+                                traversal += col_len
+                                val_type = int(bin(ord(f.read(1))),2)
                                 f.seek(traversal + 1)
-                                val_size = int(f.read(self.INT_SIZE).rstrip('\0'))
+                                val_size = self.byte_to_int(f.read(self.INT_SIZE))
                                 traversal += 1 + self.INT_SIZE
                                 for i in range(0, len(copy_columns)):
                                     if col_name == copy_columns[i]:
-                                        f.write(bytearray(val_size))
                                         f.seek(traversal)
-                                        f.write(bytes(copy_news[i]))
+                                        #write new value
+                                        if val_type == 0:
+                                            a,b,c,d = self.convert_int(copy_news[i])
+
+                                            f.write(str(chr(d)))
+                                            f.write(str(chr(c)))
+                                            f.write(str(chr(b)))
+                                            f.write(str(chr(a)))
+                                            
+                                                
+                                        else:
+                                            f.write(bytes(copy_news[i]))
+                                                                                    
                                         copy_columns.remove(col_name)
                                         del copy_news[i]
 
@@ -366,20 +493,38 @@ class StorageLayer:
                                 traversal += val_size
                                 f.seek(traversal)
                                         
-                            if len(copy_columns) != 0:
-                                print 'seeerrrrr'
+                            if len(copy_columns) != 0 and insert_flag == 1:
+
                                 f.seek(traversal)
                                 for i in range(0, len(copy_columns)):
                                     temp_len = len(copy_columns[i])
-                                    f.write(bytes(temp_len))
+                                    a = self.convert_single_byte(temp_len)
+                                    f.write(str(chr(a)))
                                     f.write(copy_columns[i])
-                                    f.write('0')
-                                    f.write(bytes(len(copy_news[i])))
+                                    f.write(str(chr(self.convert_single_byte(2))))
+
+
+                                    a,b,c,d = self.convert_int(len(copy_news[i]))
+
+                                    f.write(str(chr(d)))
+                                    f.write(str(chr(c)))
+                                    f.write(str(chr(b)))
+                                    f.write(str(chr(a)))
+
                                     traversal += 1 + temp_len + 1 + 4
                                     f.seek(traversal)
-                                    f.write(bytes(copy_news[i]))
+                                    f.write(copy_news[i])
+                                f.seek(filled_loc)
+                                a,b,c,d = self.convert_int(traversal - filled_start)
+
+                                f.write(str(chr(d)))
+                                f.write(str(chr(c)))
+                                f.write(str(chr(b)))
+                                f.write(str(chr(a)))
+
                     if len(keys) == 0:
                         return True
+                    data_start += allocated
                     start +=allocated
             return False
 
