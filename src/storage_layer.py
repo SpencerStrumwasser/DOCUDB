@@ -213,7 +213,7 @@ class StorageLayer:
         
         input: keys -> List of keys to grab documents for 
         input: project -> List of columns to project. Empty list means select all
-        return ->
+        return -> todo: what is the return? haha
 
         '''
         ret = [] # document.DocumentPresentation(key)
