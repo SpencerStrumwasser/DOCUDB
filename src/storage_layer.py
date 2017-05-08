@@ -63,6 +63,7 @@ class StorageLayer:
 
     '''
 
+    # Size in bytes
     INT_SIZE = 4    
     DEC_SIZE = 8
     CHAR_SIZE = 1

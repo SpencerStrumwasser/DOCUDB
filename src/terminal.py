@@ -13,11 +13,15 @@ while(True):
 	if user_input == 'exit' or user_input == 'quit':
 		print 'Goodbye, come again!'
 		break
-	elif user_input == 'gtfo':
-		print 'WOW! that was rude.. Bye.'
+	elif user_input == 'EXIT' or user_input == 'QUIT':
+		print 'Goodbye, come again!'.upper()
 		break
-	
+	elif user_input == 'hello':
+		print 'Hi'	
 	elif user_input != '':
-		p.parse(user_input)
+		if user_input[0] == '-' and user_input[1] == '-':
+			pass  # comment
+		else:
+			p.parse(user_input)
 
 

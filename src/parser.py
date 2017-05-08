@@ -1,52 +1,9 @@
+import document
+import docudb_json_translator
 
-
-LANGUAGE_KEYWORDS = set(
-                    [   'insert',
-                        'into',
-                        'select',
-                        'from',
-                        'where',
-                        'update',
-                        'set',
-                        'upsert',
-                        'delete',
-                        'create',
-                        'drop'
-                    ])
-
-
-
-# TODO: in the future, might have to seperate arithmetic, comparison, 
-OPERATORS = set(
-                [
-                '+',    # Arithmetic
-                '-',
-                '*',
-                '/',
-                '%',
-                '**',
-                '==',   # Comparison
-                '>',
-                '<',
-                '>=',
-                '<=',
-                '!=',
-                'in',
-                'and',  # Logical
-                'or',
-                'not',
-                '='     # Assignment
-                ])
-
-# These operators require a space between values, whereas 
-# other operators do not: eg 1+1 is ok. trueandtrue is not.
-WORD_OPERATORS = set(
-                [
-                'in',
-                'and',  # Logical
-                'or',
-                'not',
-                ])
+from keywords import LANGUAGE_KEYWORDS
+from keywords import OPERATORS
+from keywords import WORD_OPERATORS
 
 class Lexer:
     '''
@@ -80,7 +37,7 @@ class Lexer:
         double_quote_open = False
         curly_brace_open = False
         square_brace_open = False
-        paren_open = False
+        paren_open = 0 # counts number of (, since there can be nested parens
 
 
         cur_tok = ''
@@ -112,12 +69,18 @@ class Lexer:
                     cur_tok = ''
                     square_brace_open = False
 
-            elif paren_open: # ()
+            elif paren_open > 0: # ()
                 cur_tok += c
                 if c == ')':
-                    self.tokens.append(cur_tok)
-                    cur_tok = ''
-                    paren_open = False
+                    paren_open -= 1
+                    if paren_open == 0:
+                        self.tokens.append(cur_tok)
+                        cur_tok = ''
+
+                elif c == '(':
+                    paren_open += 1
+
+  
 
             # We are not inside a brack/paren or quote 
 
@@ -159,7 +122,7 @@ class Lexer:
 
             elif c == '(':
                 cur_tok += c
-                paren_open = True
+                paren_open += 1
 
             else:
                 # c should be a normal character hopefully!?!?!?!?!?!
@@ -167,6 +130,23 @@ class Lexer:
 
         if cur_tok != '' and cur_tok != ' ': # todo: should probably figure out why theres a empty space. 
             self.tokens.append(cur_tok)
+
+
+        if double_quote_open == True:
+            print 'Syntax Error: unclosed double quote'
+            return None
+
+        if curly_brace_open == True:
+            print 'Syntax Error: unclosed curly brace'
+            return None        
+
+        if square_brace_open == True:
+            print 'Syntax Error: unclosed square bracket'
+            return None  
+
+        if paren_open != 0:
+            print 'Syntax Error: mismatching parenthesis'
+            return None  
 
         # make a copy of self.tokens to return
         return self.tokens[:]
@@ -179,6 +159,10 @@ class Parser:
     class Command:
         '''
         Represents a command for the storage layer to execute
+
+        Note: Our use of 'json' here is not official json. It is based on json,
+        but has slightly different details (syntax and data types)
+
         '''
         def __init__(self):
 
@@ -186,7 +170,7 @@ class Parser:
             # a specific command
 
             # Generic 
-            self.verb = None # create, insert, select, ...
+            self.verb = None # create, insert, select, update, upsert, delete, drop
             self.collection = None # The collection to operate on
 
             self.invalid = False # Set to true if there is a syntax error: TODO: idk if needed
@@ -231,7 +215,7 @@ class Parser:
 
     def parse(self, query_str):
         '''
-        Parses the query into a (todo: either object or dict, or somethign)
+        Parses the query into a Command (nested class in Parser) object
         representing the command for the storage layer to execute. Also
         checks for syntax errors along the way.
 
@@ -243,9 +227,12 @@ class Parser:
 
         tokens = self.lexer.lex(query_str)
 
-        # TODO! can put some constraint checking (col length, ect.)
-        self.__start_parse(tokens, 0)
+        if tokens != None:
+            self.__start_parse(tokens, 0)
 
+
+        # todo call storage layer? 
+        self.__process_cmd()
 
 
     # All possible variations of valid syntax can be represented 
@@ -303,6 +290,8 @@ class Parser:
         else:
             self.command.invalid = True
             print 'Syntax error near: "' + cur_tok + '", '
+            if cur_tok.lower() in LANGUAGE_KEYWORDS:
+                print '    Hint: all keywords must be lowercase'
             return 
 
 
@@ -310,7 +299,7 @@ class Parser:
 
         if self.__at_invalid_idx(token_list, idx):
             self.command.invalid = True 
-            print 'Syntax error near: "' + token_list[idx - 1] + '", '
+            print 'Syntax error near: "' + token_list[idx - 1] + '" '
             print '    Maybe specify the collection you are trying to create.'
             return 
 
@@ -323,7 +312,7 @@ class Parser:
     def __create_collection(self, token_list, idx):
         if not self.__at_invalid_idx(token_list, idx):
             self.command.invalid = True 
-            print 'Syntax error near: "' + token_list[idx] + '", '
+            print 'Syntax error near: "' + token_list[idx] + '" '
             print '    Expected query to end after "' + token_list[idx - 1] + '"'
             return
 
@@ -375,6 +364,10 @@ class Parser:
             return
 
         cur_tok = token_list[idx]
+        if cur_tok[0] != '"':
+            print 'Syntax error near "' + cur_tok + '"'
+            print '    _key can only be a string '
+            return
         self.command.insert_key_name = cur_tok
 
         self.__insert_key_name(token_list, idx + 1)
@@ -390,8 +383,8 @@ class Parser:
 
         cur_tok = token_list[idx]
 
-        # TODO: parse JSON
-        self.command.json_doc = "TODO: NEED TO PARSE"
+        # String form of json. Will parse into dict later
+        self.command.json_doc = cur_tok
 
         self.__insert_json(token_list, idx + 1)
         return 
@@ -416,7 +409,7 @@ class Parser:
     def __select(self, token_list, idx):
         if self.__at_invalid_idx(token_list, idx):
             self.command.invalid = True 
-            print 'Syntax error near: "' + token_list[idx - 1] + '", '
+            print 'Syntax error near: "' + token_list[idx - 1] + '" '
             print '    Maybe missing projection specification'
             return 
 
@@ -435,7 +428,7 @@ class Parser:
     def __select_star(self, token_list, idx):
         if self.__at_invalid_idx(token_list, idx):
             self.command.invalid = True 
-            print 'Syntax error near: "' + token_list[idx - 1] + '", '
+            print 'Syntax error near: "' + token_list[idx - 1] + '" '
             print '    Probably expecting the "from" keyword'
             return 
 
@@ -466,8 +459,12 @@ class Parser:
             return 
         else:
             self.command.invalid = True 
-            print 'Syntax error near "' + token_list[idx - 1] + cur_tok + '"'
-            print '    Probably expecting a "," or "from"'
+            print 'Syntax error near "' + token_list[idx - 1] + ' ' + cur_tok + '"'
+            print '    Maybe expecting a "," or "from"'
+
+            if cur_tok in OPERATORS:
+                print '    Hint: expressions should be enclosed in () for correct parsing. eg: (col1 + 1), not col1 + 1'
+
             return 
 
     def __select_col_or_exp_comma(self, token_list, idx):
@@ -543,8 +540,12 @@ class Parser:
     def __where_exp(self, token_list, idx):
         if not self.__at_invalid_idx(token_list, idx):
             self.command.invalid = True 
-            print 'Syntax error near: "' + token_list[idx] + '", '
+            print 'Syntax error near: "' + token_list[idx] + '" '
             print '    Expected query to end after "' + token_list[idx - 1] + '"'
+
+            if token_list[idx] in OPERATORS:
+                print '    Hint: expressions should be enclosed in () for correct parsing. eg: (col1 + 1), not col1 + 1'
+
             return 
 
         self.__where_end(token_list, -1)
@@ -811,6 +812,64 @@ class Parser:
         print self.command.to_string()
 
         # TODO: connect to dtorage layer
+
+
+    # Accessing storage layer
+    def __call_storage_layer(self):
+        '''
+
+        '''
+        pass
+
+    def __process_cmd(self):
+        '''
+        Called after __start_parse. Does additional processing to prepare the 
+        command for execution
+
+        Gets the command.json_doc or command.update attributes ready 
+        Also checks for language constraint violations
+
+        * Column name constraints for insert are checked in docudb_json_translator
+        '''
+
+        # Process self.command.json_doc if necessary - insert
+        if self.command.verb == 'insert':
+            ins_dict = docudb_json_translator.json_to_dict(self.command.json_doc)
+            print ins_dict 
+
+        if self.command.json_doc != None:
+            pass
+
+        # Process self.command.update if necessary - update/upsert
+        # todo
+
+
+        # All expressions with 2 or more elements enclosed with ()
+        #  todo
+
+        # Key:
+        #   - only strings -> enclosed by quotes 
+        #   - max length == 30
+        #   - cannot be a language keyword or operator
+
+
+
+
+
+        # Collection names:
+        #   - todo: define length constraint
+        #   - only consists of alpha-numeric and '_'
+        #   - has to start with a-z
+        #   - cannot be a language keyword or operator, or '_key'
+
+
+        # todo. there are other constraints... esp semantic ones
+
+
+
+
+        
+
 
 
     # Helper functions
