@@ -855,7 +855,7 @@ class Parser:
                 file_to_insert.add_value(insert_key, col_size, 0, 4, value)
                 memory_needed += 1 + 4 + 4
             elif isinstance(value, float):
-                value_size = len(value)
+                value_size = len(str(value))
                 file_to_insert.add_value(insert_key, col_size, 1, value_size, str(value))
                 memory_needed += 1 + value_size + 4
         for ite in range(10, 25):
