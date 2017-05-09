@@ -49,7 +49,7 @@ def __parse(tokens, idx, cur_dict):
 
     if __at_invalid_idx(tokens, idx):
         print 'JSON formatting error: Literally empty'
-        cur_dict = None
+        cur_dict.clear()
         return 
 
     cur_tok = tokens[idx]
@@ -61,7 +61,7 @@ def __parse(tokens, idx, cur_dict):
         pass
         print 'JSON formatting error near ' + cur_tok
         print '    Expected "{"'
-        cur_dict = None
+        cur_dict.clear()
 
     return
 
@@ -71,15 +71,15 @@ def __col_val(tokens, idx, cur_dict):
 
     if __at_invalid_idx(tokens, idx):
         print 'JSON formatting error near ' + tokens[idx]
-        cur_dict = None
+        cur_dict.clear()
         return
     elif __at_invalid_idx(tokens, idx + 1):
         print 'JSON formatting error near ' + tokens[idx + 1]
-        cur_dict = None
+        cur_dict.clear()
         return
     elif __at_invalid_idx(tokens, idx + 2):
         print 'JSON formatting error near ' + tokens[idx + 2]
-        cur_dict = None
+        cur_dict.clear()
         return
 
 
@@ -90,35 +90,36 @@ def __col_val(tokens, idx, cur_dict):
     # Check column name constraints
     if col_tok in cur_dict:
         print 'JSON Error: Repeated column names disallowed'
-        cur_dict = None
+        cur_dict.clear()
         return        
     if len(col_tok) == 0:
         print 'JSON Error: Column names cannot be empty'
-        cur_dict = None
+        cur_dict.clear()
         return
     if len(col_tok) > 255:
         print 'JSON Error: Column names have 255 max character length'
-        cur_dict = None
+        cur_dict.clear()
+        return
+    if col_tok in LANGUAGE_KEYWORDS or col_tok in OPERATORS:
+        print 'JSON Error: Column name cannot be a keyword or operator: ' + col_tok
+        cur_dict.clear()
         return
     for ch in col_tok:
         if not ch.isalnum() and ch != '_':
             print 'JSON Error: Column names can only contain A-Z, a-z, 0-9, and _'
-            cur_dict = None
+            cur_dict.clear()
             return
-    if not ch[0].isalpha():
+    if not col_tok[0].isalpha():
         print 'JSON Error: Column name has to start with a-z or A-Z character'
-        cur_dict = None
+        cur_dict.clear()
         return
-    if col_tok in LANGUAGE_KEYWORDS or col_tok in OPERATORS:
-        print 'JSON Error: Column name cannot be a keyword or operator: ' + col_tok
-        cur_dict = None
-        return
+
 
     # Colon
     if colon_tok != ':':
         print 'JSON Error at: ' + col_tok + ' ' + colon_tok + ' ' + val_tok
         print '    Colon expected between column name and value'
-        cur_dict = None
+        cur_dict.clear()
         return
 
     # Parse value
@@ -137,7 +138,7 @@ def __col_val(tokens, idx, cur_dict):
         # 4 bytes -> 32 bits for storing int. 1 bit for +/-
         if abs(int_val) >= 2^31:
             print 'JSON Error: int values range from (-2147483647, 2147483647). 32 bit storage space'
-            cur_dict = None
+            cur_dict.clear()
             return
         else:
             cur_dict[col_tok] = int_val
@@ -149,14 +150,14 @@ def __col_val(tokens, idx, cur_dict):
             cur_dict[col_tok] = float_val
         except:
             print 'JSON Error: undefined value type: ' + col_tok + ' ' + colon_tok + ' ' + val_tok
-            cur_dict = None
+            cur_dict.clear()
             return
 
     # Check for comma or end of json
     if __at_invalid_idx(tokens, idx + 3):
         print 'JSON formatting error near ' + tokens[idx + 2]
         print '    Additional token expected '
-        cur_dict = None
+        cur_dict.clear()
         return
     sep_tok = tokens[idx + 3]
 
@@ -167,7 +168,7 @@ def __col_val(tokens, idx, cur_dict):
     else:
         print 'JSON formatting error near ' + tokens[idx + 2]
         print '    Expecting either "," or "}"'
-        cur_dict = None
+        cur_dict.clear()
         return
 
 

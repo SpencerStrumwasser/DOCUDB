@@ -235,11 +235,19 @@ class Parser:
 
         if tokens != None:
             self.__start_parse(tokens, 0)
+        else:
+            # print 'empty queries should not get here.'
+            return 
 
+        if self.command.invalid == True:
+            print 'Syntax Error'
+            return 
 
+        ## todo: before calling storage layer, check if self.command.invalid == True
         # todo call storage layer? 
         self.__process_cmd()
         self.__call_storage_layer()
+
 
 
     # All possible variations of valid syntax can be represented 
@@ -326,10 +334,13 @@ class Parser:
         self.__create_end(token_list, -1)
 
     def __create_end(self, token_list, idx):
-        print 'calling command....'
+
+        # print 'calling command....'
         # print self.command.to_string()
 
-        # TODO: call the storage layer 
+        return
+
+
 
     def __insert(self, token_list, idx):
         if self.__at_invalid_idx(token_list, idx):
@@ -371,7 +382,8 @@ class Parser:
             return
 
         cur_tok = token_list[idx]
-        if cur_tok[0] != '"':
+        if cur_tok[0] != '"' or len(cur_tok) < 2:
+            self.command.invalid = True
             print 'Syntax error near "' + cur_tok + '"'
             print '    _key can only be a string '
             return
@@ -407,10 +419,10 @@ class Parser:
         return
 
     def __insert_end(self, token_list, idx):
-        print 'calling command...'
+
+        # print 'calling command...'
         # print self.command.to_string()
 
-        # TODO: call the stoarage layer
         return 
 
     def __select(self, token_list, idx):
@@ -490,10 +502,12 @@ class Parser:
 
 
     def __select_no_collection_end(self, token_list, idx):
-        print 'calling command...'
+
+        # print 'calling command...'
         # print self.command.to_string()
 
-        # TODO: call storage layer
+        return
+
 
     def __select_from(self, token_list, idx):
         if self.__at_invalid_idx(token_list, idx):
@@ -526,10 +540,11 @@ class Parser:
 
 
     def __select_no_pred_end(self, token_list, idx):
-        print 'calling command...'
+
+        # print 'calling command...'
         # print self.command.to_string()
 
-        # TODO CALL STORAGE LAYER
+        return 
 
     def __where(self, token_list, idx):
         if self.__at_invalid_idx(token_list, idx):
@@ -559,11 +574,11 @@ class Parser:
 
 
     def __where_end(self, token_list, idx):
-        print 'calling command...'
+
+        # print 'calling command...'
         # print self.command.to_string()
 
-        # TODO: call storage layer!!!!!!
-
+        return
 
     def __update(self, token_list, idx):
         if self.__at_invalid_idx(token_list, idx):
@@ -676,10 +691,11 @@ class Parser:
             return
 
     def __update_no_pred_end(self, token_list, idx):
-        print 'calling command...'
+
+        # print 'calling command...'
         # print self.command.to_string()
 
-        #TODO: call stoarl layersrrrrrrrrrrr 
+        return
 
     def __delete(self, token_list, idx):
         if self.__at_invalid_idx(token_list, idx):
@@ -785,10 +801,11 @@ class Parser:
             return 
 
     def __delete_no_pred_end(self, token_list, idx):
-        print 'calling command...'
+
+        # print 'calling command...'
         # print self.command.to_string()
 
-        # TODO: call storage layer
+        return 
 
     def __drop(self, token_list, idx):
         if self.__at_invalid_idx(token_list, idx):
@@ -815,10 +832,7 @@ class Parser:
         self.__drop_end(token_list, idx + 1)
 
     def __drop_end(self, token_list, idx):
-        print 'calling command ...'
-        # print self.command.to_string()
-
-        # TODO: connect to dtorage layer
+        return
 
     def __insert_storage_layer(self, filename):
 
@@ -848,7 +862,7 @@ class Parser:
             if (memory_needed < 2**ite):
                 break
         file_to_insert.allocated_size = 2**ite-1
-        print file_to_insert.allocated_size
+        # print file_to_insert.allocated_size
         sl.write_data_to_memory(sl.search_memory_for_free(1000), file_to_insert)
 
 
@@ -914,7 +928,7 @@ class Parser:
                         sl.delete_by_keys([key_val.lower()])
                         
 
-                        
+
 
     # Accessing storage layer
     def __call_storage_layer(self):
@@ -947,7 +961,6 @@ class Parser:
 
 
 
-    # todo here - working on this func
     def __process_cmd(self):
         '''
         Called after __start_parse. Does additional processing to prepare the 
@@ -956,32 +969,71 @@ class Parser:
         Gets the command.json_doc or command.update attributes ready 
         Also checks for language constraint violations
 
-        * Column name constraints for insert are checked in docudb_json_translator
+        * Column name constraints for insert are checked in docudb_json_translator/docudb_update_translator
         '''
+
+        # todo delete
+        print '__process_cmd() called'
+        print ''
+        #
 
         # Process self.command.json_doc if necessary - insert
         if self.command.verb == 'insert':
-            ins_dict = docudb_json_translator.json_to_dict(self.command.json_doc)
-            self.command.json_doc = ins_dict    
+            ins_dict = docudb_json_translator.json_to_dict(self.command.json_doc)  
+            if len(ins_dict) != 0: # len0 signals that an error has occured 
+                self.command.json_doc = ins_dict
+            else:
+                self.command.invalid = True
+                print 'Error in json parse' # todo delete
+                return 
 
-        if self.command.json_doc != None:
-            pass
+            # todo delete
+            print 'the insert json:'
+            print self.command.json_doc
+            print ''
+            #
 
         # Process self.command.update if necessary - update/upsert
-        # todo
-        # if self.command.verb == 'update' or self.command.verb == 'upsert':
-        #     upd_dict = docudb_update_translator. ()....
+        if self.command.verb == 'update' or self.command.verb == 'upsert':
+             #  {'update_dict' : update_dict, 'cols' : cols, 'vals' : vals}
+            upd_dict = docudb_update_translator.strlists_to_dict(self.command.temp_cols, self.command.temp_vals)
+            if len(upd_dict['update_dict']) != 0: # len 0 signals an error occurred 
+                self.command.update = upd_dict['update_dict']
+                self.command.temp_cols = upd_dict['cols']
+                self.command.temp_vals = upd_dict['vals']
+            else:
+                self.command.invalid = True
+                print 'Error in update format'
+                return 
 
-        
+            # todo delete
+            print 'the update dict:'
+            print self.command.update
+            print ''
+            #
+
+        # TODO: probably cannot check this
         # All expressions with 2 or more elements enclosed with ()
-        #  todo
+        
 
         # Key:
         #   - only strings -> enclosed by quotes 
         #   - max length == 30
         #   - cannot be a language keyword or operator
-
-
+        if self.command.verb == 'insert':
+            if self.command.insert_key_name[0] != '"' or self.command.insert_key_name [-1] != '"':
+                print 'Syntax Error: Key should be enclosed by quotes: ' + str(self.command.insert_key_name)
+                self.command.invalid = True
+                return            
+            self.command.insert_key_name = self.command.insert_key_name[1:-1] # strip quotes
+            if self.command.insert_key_name in LANGUAGE_KEYWORDS.union(WORD_OPERATORS):
+                print 'Syntax Error: Key cannot be a keyword or operator: ' + str(self.command.insert_key_name)
+                self.command.invalid = True
+                return
+            if len(self.command.insert_key_name) >= 30 or len(self.command.insert_key_name) == 0:
+                print 'Syntax Error: Key must be at least 1 and max 30 chars long: ' + str(self.command.insert_key_name)
+                self.command.invalid = True
+                return            
 
 
 
@@ -990,9 +1042,27 @@ class Parser:
         #   - only consists of alpha-numeric and '_'
         #   - has to start with a-z
         #   - cannot be a language keyword or operator, or '_key'
+        if len(self.command.collection) == 0:
+            print 'Parsing Error: Collection with empty name'
+            self.command.invalid = True
+            return
+        for ch in self.command.collection:
+            if not ch.isalnum() and ch != '_':
+                print 'Syntax Error: Collection names can only contain A-Z, a-z, 0-9, and _'
+                self.command.invalid = True
+                return
+        if not self.command.collection[0].isalpha():
+            print 'Syntax Error: Collection names must start with alphabetical char.'
+            self.command.invalid = True
+            return 
+        if self.command.collection in LANGUAGE_KEYWORDS.union(WORD_OPERATORS):
+            print 'Syntax Error: Collection name cannot be a keyword or operator: ' + str(self.command.collection)
+            self.command.invalid = True
+            return
 
 
-        # todo. there are other constraints... esp semantic ones
+
+        # todo. there are probably  other constraints... esp semantic ones
 
 
 
