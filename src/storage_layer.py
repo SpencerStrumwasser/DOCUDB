@@ -346,8 +346,10 @@ class StorageLayer:
                     allocated_temp = data[data_start + self.BOOLEAN_SIZE: data_start + self.BOOLEAN_SIZE + self.INT_SIZE]
                     allocated = self.byte_to_int(allocated_temp)
                     if dirty == 1:
+                        # print keys
                         datakey = data[data_start + self.BOOLEAN_SIZE + 2 * self.INT_SIZE:data_start + self.BOOLEAN_SIZE + 2 * self.INT_SIZE + 30].rstrip('\0')
-                        if datakey in keys:
+                        # print datakey   
+                        if str(datakey) in keys:
                             keys.remove(datakey)
                             
                             document_binary = data[data_start:data_start+allocated]
