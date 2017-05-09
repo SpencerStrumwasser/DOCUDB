@@ -358,7 +358,8 @@ class StorageLayer:
                         return ret
                     data_start += allocated
                     start += allocated
-            if ret == None:
+
+            if ret == []:
                 return False
             return ret
 
