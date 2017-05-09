@@ -837,6 +837,7 @@ class Parser:
     def __insert_storage_layer(self, filename):
 
         sl = StorageLayer(filename)
+        print self.command.insert_key_name
         file_to_insert = DocumentData(0,0, self.command.insert_key_name)
         memory_needed = 0
         columns = self.command.json_doc
@@ -863,7 +864,7 @@ class Parser:
                 break
         file_to_insert.allocated_size = 2**ite-1
         # print file_to_insert.allocated_size
-        sl.write_data_to_memory(sl.search_memory_for_free(1000), file_to_insert)
+        sl.write_data_to_memory(sl.search_memory_for_free(file_to_insert), file_to_insert)
 
 
 
@@ -877,7 +878,7 @@ class Parser:
             if self.command.predicate[9] == '"':
                 for i in range(10, len(self.command.predicate)):
                     if self.command.predicate[i:i+2] == '")' :
-                        key_val = self.command.predicate[9:i+1]
+                        key_val = self.command.predicate[10:i]
                         print "Finding Document for Key: " + key_val
                         gettt = sl.get_tuples_by_key([key_val.lower()])
                         if gettt == False:
@@ -894,7 +895,7 @@ class Parser:
             if self.command.predicate[9] == '"':
                 for i in range(10, len(self.command.predicate)):
                     if self.command.predicate[i:i+2] == '")' :
-                        key_val = self.command.predicate[9:i+1]
+                        key_val = self.command.predicate[10:i]
                         print "Updating Document for Key: " + key_val
                         print self.command.temp_cols
                         print self.command.temp_vals
@@ -910,7 +911,7 @@ class Parser:
             if self.command.predicate[9] == '"':
                 for i in range(10, len(self.command.predicate)):
                     if self.command.predicate[i:i+2] == '")' :
-                        key_val = self.command.predicate[9:i+1]
+                        key_val = self.command.predicate[10:i]
                         print "Updating Document for Key: " + key_val
                         sl.update_by_keys([key_val.lower()], self.command.temp_cols, self.command.temp_vals, 1)
 
@@ -923,7 +924,7 @@ class Parser:
             if self.command.predicate[9] == '"':
                 for i in range(10, len(self.command.predicate)):
                     if self.command.predicate[i:i+2] == '")' :
-                        key_val = self.command.predicate[9:i+1]
+                        key_val = self.command.predicate[10:i]
                         print "Deleting Document for Key: " + key_val
                         sl.delete_by_keys([key_val.lower()])
                         
