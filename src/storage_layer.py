@@ -318,6 +318,7 @@ class StorageLayer:
         ret = [] # document.DocumentPresentation(key)
 
         with open(self.filename, 'rb') as f:
+            ret = False
             start = 0
             end = start + self.read_size
             #check if file has anything written

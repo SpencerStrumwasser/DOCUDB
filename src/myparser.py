@@ -899,6 +899,21 @@ class Parser:
                         key_val = self.command.predicate[9:i+1]
                         print "Updating Document for Key: " + key_val
                         sl.update_by_keys([key_val.lower()], self.command.temp_cols, self.command.temp_vals, 1)
+
+    def __delete_storage_layer(self, filename):
+
+        sl = StorageLayer(filename)
+        if self.command.predicate == None:
+            return False
+        elif self.command.predicate[:9] == "(_key == ":
+            if self.command.predicate[9] == '"':
+                for i in range(10, len(self.command.predicate)):
+                    if self.command.predicate[i:i+2] == '")' :
+                        key_val = self.command.predicate[9:i+1]
+                        print "Updating Document for Key: " + key_val
+                        sl.delete_by_keys([key_val.lower()])
+                        
+
                         
 
     # Accessing storage layer
@@ -922,6 +937,8 @@ class Parser:
             self.__update_storage_layer(filename)
         elif verb == 'upsert':
             self.__upsert_storage_layer(filename)
+        elif verb == 'delete':
+            self.__delete_storage_layer(filename)
 
 
         return True
