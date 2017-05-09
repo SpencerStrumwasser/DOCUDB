@@ -1,10 +1,14 @@
 import document
+from document import DocumentData
+from storage_layer import StorageLayer
 import docudb_json_translator
 import docudb_update_translator
 
 from keywords import LANGUAGE_KEYWORDS
 from keywords import OPERATORS
 from keywords import WORD_OPERATORS
+
+
 
 
 class Lexer:
@@ -235,6 +239,7 @@ class Parser:
 
         # todo call storage layer? 
         self.__process_cmd()
+        self.__call_storage_layer()
 
 
     # All possible variations of valid syntax can be represented 
@@ -322,7 +327,7 @@ class Parser:
 
     def __create_end(self, token_list, idx):
         print 'calling command....'
-        print self.command.to_string()
+        # print self.command.to_string()
 
         # TODO: call the storage layer 
 
@@ -403,7 +408,7 @@ class Parser:
 
     def __insert_end(self, token_list, idx):
         print 'calling command...'
-        print self.command.to_string()
+        # print self.command.to_string()
 
         # TODO: call the stoarage layer
         return 
@@ -486,7 +491,7 @@ class Parser:
 
     def __select_no_collection_end(self, token_list, idx):
         print 'calling command...'
-        print self.command.to_string()
+        # print self.command.to_string()
 
         # TODO: call storage layer
 
@@ -522,7 +527,7 @@ class Parser:
 
     def __select_no_pred_end(self, token_list, idx):
         print 'calling command...'
-        print self.command.to_string()
+        # print self.command.to_string()
 
         # TODO CALL STORAGE LAYER
 
@@ -555,7 +560,7 @@ class Parser:
 
     def __where_end(self, token_list, idx):
         print 'calling command...'
-        print self.command.to_string()
+        # print self.command.to_string()
 
         # TODO: call storage layer!!!!!!
 
@@ -672,7 +677,7 @@ class Parser:
 
     def __update_no_pred_end(self, token_list, idx):
         print 'calling command...'
-        print self.command.to_string()
+        # print self.command.to_string()
 
         #TODO: call stoarl layersrrrrrrrrrrr 
 
@@ -781,7 +786,7 @@ class Parser:
 
     def __delete_no_pred_end(self, token_list, idx):
         print 'calling command...'
-        print self.command.to_string()
+        # print self.command.to_string()
 
         # TODO: call storage layer
 
@@ -811,17 +816,119 @@ class Parser:
 
     def __drop_end(self, token_list, idx):
         print 'calling command ...'
-        print self.command.to_string()
+        # print self.command.to_string()
 
         # TODO: connect to dtorage layer
 
+    def __insert_storage_layer(self, filename):
+
+        sl = StorageLayer(filename)
+        file_to_insert = DocumentData(0,0, self.command.insert_key_name)
+        memory_needed = 0
+        columns = self.command.json_doc
+        for key, value in columns.iteritems():
+            insert_key = str(key)
+            col_size = len(str(key))
+            memory_needed += col_size + 4
+            if isinstance(value, str):
+                value_size = len(value)
+                file_to_insert.add_value(insert_key, col_size, 2, value_size, value)
+                memory_needed += 1 + value_size + 4
+            elif isinstance(value, bool):
+                file_to_insert.add_value(insert_key, col_size, 3, 1, value)
+                memory_needed += 1 + 4 + 1
+            elif isinstance(value, int):
+                file_to_insert.add_value(insert_key, col_size, 0, 4, value)
+                memory_needed += 1 + 4 + 4
+            elif isinstance(value, float):
+                value_size = len(value)
+                file_to_insert.add_value(insert_key, col_size, 1, value_size, str(value))
+                memory_needed += 1 + value_size + 4
+        for ite in range(10, 25):
+            if (memory_needed < 2**ite):
+                break
+        file_to_insert.allocated_size = 2**ite-1
+        print file_to_insert.allocated_size
+        sl.write_data_to_memory(sl.search_memory_for_free(1000), file_to_insert)
+
+
+
+
+    def __select_storage_layer(self, filename):
+
+        sl = StorageLayer(filename)
+        if self.command.predicate == None:
+            return False
+        elif self.command.predicate[:9] == "(_key == ":
+            if self.command.predicate[9] == '"':
+                for i in range(10, len(self.command.predicate)):
+                    if self.command.predicate[i:i+2] == '")' :
+                        key_val = self.command.predicate[9:i+1]
+                        print "Finding Document for Key: " + key_val
+                        gettt = sl.get_tuples_by_key([key_val.lower()])
+                        if gettt == False:
+                            print "No Document Exists For This Key"
+
+
+
+    def __update_storage_layer(self, filename):
+
+        sl = StorageLayer(filename)
+        if self.command.predicate == None:
+            return False
+        elif self.command.predicate[:9] == "(_key == ":
+            if self.command.predicate[9] == '"':
+                for i in range(10, len(self.command.predicate)):
+                    if self.command.predicate[i:i+2] == '")' :
+                        key_val = self.command.predicate[9:i+1]
+                        print "Updating Document for Key: " + key_val
+                        print self.command.temp_cols
+                        print self.command.temp_vals
+                        sl.update_by_keys([key_val.lower()], self.command.temp_cols, self.command.temp_vals, 0)
+                        
+
+    def __upsert_storage_layer(self, filename):
+
+        sl = StorageLayer(filename)
+        if self.command.predicate == None:
+            return False
+        elif self.command.predicate[:9] == "(_key == ":
+            if self.command.predicate[9] == '"':
+                for i in range(10, len(self.command.predicate)):
+                    if self.command.predicate[i:i+2] == '")' :
+                        key_val = self.command.predicate[9:i+1]
+                        print "Updating Document for Key: " + key_val
+                        sl.update_by_keys([key_val.lower()], self.command.temp_cols, self.command.temp_vals, 1)
+                        
 
     # Accessing storage layer
     def __call_storage_layer(self):
         '''
-
+        This will convert a command to a call on the storage layer
         '''
-        pass
+        if (self.command.invalid == True):
+            return False
+
+        verb = self.command.verb
+        filename = "../data/" + str(self.command.collection) + ".es"
+        if verb == 'create':
+            with open(filename, 'wb') as f:
+                f.close()
+        if verb == 'insert':
+            self.__insert_storage_layer(filename)
+        elif verb == 'select':
+            self.__select_storage_layer(filename)
+        elif verb == 'update':
+            self.__update_storage_layer(filename)
+        elif verb == 'upsert':
+            self.__upsert_storage_layer(filename)
+
+
+        return True
+            
+
+
+
 
     # todo here - working on this func
     def __process_cmd(self):
@@ -838,7 +945,7 @@ class Parser:
         # Process self.command.json_doc if necessary - insert
         if self.command.verb == 'insert':
             ins_dict = docudb_json_translator.json_to_dict(self.command.json_doc)
-            print ins_dict 
+            self.command.json_doc = ins_dict    
 
         if self.command.json_doc != None:
             pass
@@ -872,7 +979,7 @@ class Parser:
 
 
 
-        print self.command.to_string()
+        # print self.command.to_string()
         
 
 

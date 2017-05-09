@@ -98,6 +98,8 @@ with open(filename, 'rb') as f:
 
 	print fff
 
+print "asdfassadfsadfsaddd"
+print "fasdfsfuckasdf"
 sl.write_data_to_memory(sl.search_memory_for_free(1000), to_insert)
 
 with open(filename, 'rb') as f:

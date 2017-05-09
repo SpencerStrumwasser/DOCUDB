@@ -102,6 +102,7 @@ class StorageLayer:
             #check if file has anything written
             not_eof = (os.stat(self.filename).st_size != 0) 
             while(not_eof):
+
                 f.seek(start)
                 #load a subset of data
                 data = f.read(end - start)
@@ -120,13 +121,13 @@ class StorageLayer:
                     dirty = int(data[data_start])
                     allocated_temp = data[data_start + self.BOOLEAN_SIZE: data_start + self.BOOLEAN_SIZE + self.INT_SIZE]
                     allocated = self.byte_to_int(allocated_temp)
-
                     if (dirty == 0) and (allocated >= size):
                         return start
                     else:
                         data_start += allocated
                         start += allocated
                 end = start + self.read_size
+
             return start
 
 
@@ -330,17 +331,17 @@ class StorageLayer:
 
                 if (size_of_data < self.read_size):
                     not_eof = False
+                if size_of_data == 0:
+                    return False
                 init_start = start
                 data_start = 0  
                 while start <= init_start + size_of_data:
 
 
                     if data[data_start] == '\0':
-
                         dirty = 0
                     else:   
                         dirty = int(data[data_start])
-
 
                     allocated_temp = data[data_start + self.BOOLEAN_SIZE: data_start + self.BOOLEAN_SIZE + self.INT_SIZE]
                     allocated = self.byte_to_int(allocated_temp)
@@ -472,7 +473,7 @@ class StorageLayer:
                                 val_size = self.byte_to_int(f.read(self.INT_SIZE))
                                 traversal += 1 + self.INT_SIZE
                                 for i in range(0, len(copy_columns)):
-                                    if col_name == copy_columns[i]:
+                                    if (col_name) == copy_columns[i]:
                                         f.seek(traversal)
                                         #write new value
                                         if val_type == 0:
