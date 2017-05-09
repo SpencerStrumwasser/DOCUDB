@@ -1,9 +1,10 @@
-import parser
+import myparser
+
 
 
 print 'Hello. Welcome to the DocuDB Terminal...'
 
-p = parser.Parser()
+p = myparser.Parser()
 
 while(True):
 
