@@ -105,7 +105,7 @@ def __col_val(tokens, idx, cur_dict):
             print 'JSON Error: Column names can only contain A-Z, a-z, 0-9, and _'
             cur_dict = None
             return
-    if not ch[0].isalpha():
+    if not col_tok[0].isalpha():
         print 'JSON Error: Column name has to start with a-z or A-Z character'
         cur_dict = None
         return

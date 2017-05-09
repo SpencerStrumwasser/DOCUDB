@@ -835,18 +835,26 @@ class Parser:
         * Column name constraints for insert are checked in docudb_json_translator
         '''
 
+        # todo delete
+        print 'process command called'
+
         # Process self.command.json_doc if necessary - insert
         if self.command.verb == 'insert':
             ins_dict = docudb_json_translator.json_to_dict(self.command.json_doc)
-            print ins_dict 
+            self.command.json_doc = ins_dict
 
-        if self.command.json_doc != None:
-            pass
+            # todo delete
+            print 'insert json:\n'
+            print self.command.json_doc
 
         # Process self.command.update if necessary - update/upsert
-        # todo
-        # if self.command.verb == 'update' or self.command.verb == 'upsert':
-        #     upd_dict = docudb_update_translator. ()....
+        if self.command.verb == 'update' or self.command.verb == 'upsert':
+            upd_dict = docudb_update_translator.strlists_to_dict(self.command.temp_cols, self.command.temp_vals)
+            self.update = upd_dict
+
+            # todo delete
+            print 'update json:\n'
+            print self.update
 
         
         # All expressions with 2 or more elements enclosed with ()
