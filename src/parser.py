@@ -845,8 +845,10 @@ class Parser:
 
         # Process self.command.update if necessary - update/upsert
         # todo
-        if self.command.verb == 'update' or self.command.verb == 'upsert':
-            upd_dict = docudb_update_translator. ()....
+        # if self.command.verb == 'update' or self.command.verb == 'upsert':
+        #     upd_dict = docudb_update_translator. ()....
+
+        
         # All expressions with 2 or more elements enclosed with ()
         #  todo
 
