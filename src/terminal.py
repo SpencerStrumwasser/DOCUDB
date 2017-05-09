@@ -11,14 +11,16 @@ while(True):
 
 	user_input = raw_input('ddb> ')
 
-	if user_input == 'exit' or user_input == 'quit':
+	if user_input == 'exit' or user_input == 'quit' or user_input == 'bye':
 		print 'Goodbye, come again!'
 		break
 	elif user_input == 'EXIT' or user_input == 'QUIT':
 		print 'Goodbye, come again!'.upper()
-		break
+		break	
 	elif user_input == 'hello':
 		print 'Hi'	
+
+
 	elif user_input != '':
 		if user_input[0] == '-' and user_input[1] == '-':
 			pass  # comment

@@ -29,17 +29,15 @@ def strlists_to_dict(cols_str, vals_str):
         return None
     __make_dict(cols, vals, update_dict)
 
-    return update_dict
+
+    return {'update_dict' : update_dict, 'cols' : cols, 'vals' : vals}
 
     
 def __make_dict(cols, vals, cur_dict):
 
-    print cols
-    print vals
-
     if len(cols) != len(vals):
         print 'Update Syntax Error: number of cols and values do not match: ' + str(cols) + ' = ' + str(vals)
-        cur_dict = None
+        cur_dict.clear()
         return
 
     for i in range(len(cols)):
@@ -49,28 +47,28 @@ def __make_dict(cols, vals, cur_dict):
         # Check column name constraints
         if col_tok in cur_dict:
             print 'Update Error: Repeated column names disallowed'
-            cur_dict = None
+            cur_dict.clear()
             return        
         if len(col_tok) == 0:
             print 'Update Error: Column names cannot be empty'
-            cur_dict = None
+            cur_dict.clear()
+            return
+        if col_tok in LANGUAGE_KEYWORDS or col_tok in OPERATORS:
+            print 'Update Error: Column name cannot be a keyword or operator: ' + col_tok
+            cur_dict.clear()
             return
         if len(col_tok) > 255:
             print 'Update Error: Column names have 255 max character length'
-            cur_dict = None
+            cur_dict.clear()
             return
         for ch in col_tok:
             if not ch.isalnum() and ch != '_':
                 print 'Update Error: Column names can only contain A-Z, a-z, 0-9, and _'
-                cur_dict = None
+                cur_dict.clear()
                 return
         if not col_tok[0].isalpha():
             print 'Update Error: Column name has to start with a-z or A-Z character'
-            cur_dict = None
-            return
-        if col_tok in LANGUAGE_KEYWORDS or col_tok in OPERATORS:
-            print 'Update Error: Column name cannot be a keyword or operator: ' + col_tok
-            cur_dict = None
+            cur_dict.clear()
             return
 
         # Parse value
@@ -88,8 +86,8 @@ def __make_dict(cols, vals, cur_dict):
             int_val = int(val_tok)
             # 4 bytes -> 32 bits for storing int. 1 bit for +/-
             if abs(int_val) >= 2^31:
-                print 'JSON Error: int values range from (-2147483647, 2147483647). 32 bit storage space'
-                cur_dict = None
+                print 'Update Syntax Error: int values range from (-2147483647, 2147483647). 32 bit storage space'
+                cur_dict.clear()
                 return
             else:
                 cur_dict[col_tok] = int_val
@@ -100,8 +98,8 @@ def __make_dict(cols, vals, cur_dict):
                 float_val = float(val_tok)
                 cur_dict[col_tok] = float_val
             except:
-                print 'JSON Error: undefined value type: ' + col_tok + ' ' + colon_tok + ' ' + val_tok
-                cur_dict = None
+                print 'Update Syntax Error: undefined value type: ' + col_tok + ' = ' + val_tok
+                cur_dict.clear()
                 return
 
 
