@@ -318,7 +318,6 @@ class StorageLayer:
         ret = [] # document.DocumentPresentation(key)
 
         with open(self.filename, 'rb') as f:
-            ret = False
             start = 0
             end = start + self.read_size
             #check if file has anything written
@@ -359,6 +358,8 @@ class StorageLayer:
                         return ret
                     data_start += allocated
                     start += allocated
+            if ret == None:
+                return False
             return ret
 
 
