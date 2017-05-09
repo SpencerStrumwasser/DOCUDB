@@ -358,7 +358,8 @@ class StorageLayer:
                         return ret
                     data_start += allocated
                     start += allocated
-            if ret == None:
+
+            if ret == []:
                 return False
             return ret
 
@@ -479,7 +480,7 @@ class StorageLayer:
                                         f.seek(traversal)
                                         #write new value
                                         if val_type == 0:
-                                            a,b,c,d = self.convert_int(copy_news[i])
+                                            a,b,c,d = self.convert_int(int(copy_news[i]))
 
                                             f.write(str(chr(d)))
                                             f.write(str(chr(c)))

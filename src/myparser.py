@@ -924,7 +924,7 @@ class Parser:
                 for i in range(10, len(self.command.predicate)):
                     if self.command.predicate[i:i+2] == '")' :
                         key_val = self.command.predicate[9:i+1]
-                        print "Updating Document for Key: " + key_val
+                        print "Deleting Document for Key: " + key_val
                         sl.delete_by_keys([key_val.lower()])
                         
 
