@@ -1,9 +1,11 @@
 import document
 import docudb_json_translator
+import docudb_update_translator
 
 from keywords import LANGUAGE_KEYWORDS
 from keywords import OPERATORS
 from keywords import WORD_OPERATORS
+
 
 class Lexer:
     '''
@@ -182,8 +184,8 @@ class Parser:
             # Update/upsert specific
             self.update = {} # dictionary containing the updates: eg -> 
                              # {updated_col : updated_value, ...}
-            self.temp_cols = [] # Later processed to fill up self.update
-            self.temp_vals = []
+            self.temp_cols = None # Later processed to fill up self.update
+            self.temp_vals = None
 
             # Projection - select and delete
             self.projection = [] # List of cols/expressions, or empty for *
@@ -821,6 +823,7 @@ class Parser:
         '''
         pass
 
+    # todo here - working on this func
     def __process_cmd(self):
         '''
         Called after __start_parse. Does additional processing to prepare the 
@@ -842,8 +845,8 @@ class Parser:
 
         # Process self.command.update if necessary - update/upsert
         # todo
-
-
+        if self.command.verb == 'update' or self.command.verb == 'upsert':
+            upd_dict = docudb_update_translator. ()....
         # All expressions with 2 or more elements enclosed with ()
         #  todo
 
@@ -867,7 +870,7 @@ class Parser:
 
 
 
-
+        print self.command.to_string()
         
 
 
