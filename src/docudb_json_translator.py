@@ -122,6 +122,7 @@ def __col_val(tokens, idx, cur_dict):
         cur_dict.clear()
         return
 
+    ## TODO: code repeated in update_translator -> can put in seperate module
     # Parse value
     if val_tok[0] == '"' and val_tok[-1] == '"': # string
         cur_dict[col_tok] = val_tok[1:-1] # Stripping the quotes

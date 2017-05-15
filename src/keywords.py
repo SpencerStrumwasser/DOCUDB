@@ -1,4 +1,8 @@
 
+'''
+Reserved keywords in the DocuDB query language
+'''
+
 
 LANGUAGE_KEYWORDS = set(
                     [   'insert',

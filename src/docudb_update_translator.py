@@ -2,15 +2,16 @@ from keywords import LANGUAGE_KEYWORDS
 from keywords import OPERATORS
 from keywords import WORD_OPERATORS
 
-# from csv import reader 
 
 INT_SIZE = 4 # from storage layer. TODO: put this in one unified place
 
 '''
-TODO: write
+Syntax of update lists:
+    [col1, col2, ...] = [val1, val2, ...]
 
 '''
 
+# This is the only public function in this module
 def strlists_to_dict(cols_str, vals_str):
     '''
     todo: fill in funciton docstirng

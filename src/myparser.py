@@ -974,9 +974,9 @@ class Parser:
         '''
 
         # todo delete
-        print '__process_cmd() called'
-        print ''
-        #
+        # print '__process_cmd() called'
+        # print ''
+        # #
 
         # Process self.command.json_doc if necessary - insert
         if self.command.verb == 'insert':
