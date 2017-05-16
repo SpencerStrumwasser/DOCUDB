@@ -873,7 +873,20 @@ class Parser:
 
         sl = StorageLayer(filename)
         if self.command.predicate == None:
-            return False
+            print 'Finding All Documents'
+            gettt = sl.get_all_tuples(self.command.predicate)
+            if gettt == False:
+                print "No Documents Exists"
+            else:
+                for dicc in gettt:
+                    print "\n \n" 
+                    for key in dicc:
+                        if key == '_key':
+                            print "Document :" , dicc[key]
+                        else: 
+                            print key, " : ", dicc[key]
+
+            return
         elif self.command.predicate[:9] == "(_key == ":
             if self.command.predicate[9] == '"':
                 for i in range(10, len(self.command.predicate)):
@@ -883,7 +896,28 @@ class Parser:
                         gettt = sl.get_tuples_by_key([key_val.lower()])
                         if gettt == False:
                             print "No Document Exists For This Key"
-
+                        else:
+                            for dicc in gettt:
+                                print "\n \n" 
+                                for key in dicc:
+                                    if key == '_key':
+                                        print "Document :" , dicc[key]
+                                    else: 
+                                        print key, " : ", dicc[key]
+                        return
+    
+        print "Finding Document for predicate: " + self.command.predicate
+        gettt = sl.get_all_tuples(self.command.predicate)
+        if gettt == False:
+            print "No Document Exists For This Predicate"
+        else:
+            for dicc in gettt:
+                print "\n \n" 
+                for key in dicc:
+                    if key == '_key':
+                        print "Document :" , dicc[key]
+                    else: 
+                        print key, " : ", dicc[key]
 
 
     def __update_storage_layer(self, filename):

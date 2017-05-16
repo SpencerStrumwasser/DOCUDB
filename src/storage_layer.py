@@ -354,7 +354,7 @@ class StorageLayer:
                             
                             document_binary = data[data_start:data_start+allocated]
                             doc_data = self.binary_to_doc_data(document_binary)
-                            ret.append(doc_data)
+                            ret.append(doc_data.user_values_dict)
 
                     if len(keys) == 0:
                         return ret
@@ -384,10 +384,10 @@ class StorageLayer:
         filled = self.byte_to_int(filled_temp)
         key_name = str(binary[9:39]).rstrip('\0')
 
-        print 'is_filled: ' , is_filled
-        print 'allocated: ' , allocated
-        print 'filled: ' , filled
-        print 'key_name: ' , key_name
+        # print 'is_filled: ' , is_filled
+        # print 'allocated: ' , allocated
+        # print 'filled: ' , filled
+        # print 'key_name: ' , key_name
 
 
         ret = document.DocumentData(allocated, filled, key_name)
@@ -395,7 +395,7 @@ class StorageLayer:
 # | 1B - col name length | 1~255B - col name | 1B - value type | 4B - value size| ?B - value|
 
         # print binary
-        print 'start data'
+        # print 'start data'
 
         i = 39
         while(i < len(binary)):
@@ -422,11 +422,11 @@ class StorageLayer:
             ret.add_value(col_name, col_name_len, val_type, val_size, value)
 
 
-            print 'col_name_len: ' , col_name_len
-            print 'col_name: ' , col_name
-            print 'val_type: ' , val_type
-            print 'val_size: ' , val_size
-            print 'value: ' , value
+            # print 'col_name_len: ' , col_name_len
+            # print 'col_name: ' , col_name
+            # print 'val_type: ' , val_type
+            # print 'val_size: ' , val_size
+            # print 'value: ' , value
 
 
 
@@ -583,14 +583,14 @@ class StorageLayer:
                         # print keys
                         datakey = data[data_start + self.BOOLEAN_SIZE + 2 * self.INT_SIZE:data_start + self.BOOLEAN_SIZE + 2 * self.INT_SIZE + 30].rstrip('\0')
                         # print datakey   
-                        if str(datakey) in keys:
-                            keys.remove(datakey)
-                            
-                            document_binary = data[data_start:data_start+allocated]
-                            doc_data = self.binary_to_doc_data(document_binary)
-                            cols = doc_data.user_values_dict
-                            if eval_pred(exp, cols) == True:
-                                ret.append(doc_data)
+                    
+                    
+                        
+                        document_binary = data[data_start:data_start+allocated]
+                        doc_data = self.binary_to_doc_data(document_binary)
+                        cols = doc_data.user_values_dict
+                        if predicate_evaluator.eval_pred(exp, cols) == True:
+                            ret.append(doc_data.user_values_dict)
                     data_start += allocated
                     start += allocated
 
