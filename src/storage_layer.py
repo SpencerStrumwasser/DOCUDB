@@ -548,6 +548,119 @@ class StorageLayer:
 
 
 
+    def update_by_predicate(self, exp, columns, news, insert_flag):
+        '''
+        updates tupples in file based on the passed in predicate
+
+        replace: 
+        keys
+
+        '''
+        with open(self.filename, 'r+b') as f:
+            start = 0
+            end = start + self.read_size
+            #check if file has anything written
+            not_eof = True
+            if (os.stat(self.filename).st_size == 0):
+                return False
+            while not_eof:
+                f.seek(start)
+                data = f.read(end - start)
+                size_of_data = len(data)
+                if (size_of_data < self.read_size):
+                    not_eof = False
+                init_start = start  
+                data_start = 0
+                while start <= init_start + size_of_data:
+
+                    dirty = int(data[data_start])
+                    allocated_temp = data[data_start + self.BOOLEAN_SIZE: data_start + self.BOOLEAN_SIZE + self.INT_SIZE]
+                    allocated = self.byte_to_int(allocated_temp)                    
+                    if dirty == 1:
+                        datakey = data[data_start + self.BOOLEAN_SIZE + 2 * self.INT_SIZE:data_start + self.BOOLEAN_SIZE + 2 * self.INT_SIZE + 30].rstrip('\0')
+                        
+                        doc_data = self.binary_to_doc_data(document_binary)
+                        # todo here
+
+                        cols = doc_data.user_values_dict
+                        if predicate_evaluator.eval_pred(exp, cols) == True:
+
+                            traversal = start + self.BOOLEAN_SIZE + 2 * self.INT_SIZE + 30
+                            keys.remove(datakey)
+                            f.seek(traversal)
+                            filled_loc = start + self.BOOLEAN_SIZE + self.INT_SIZE
+                            filled_start = start
+                            copy_columns = columns
+                            copy_news = news
+                            while len(copy_columns) != 0:
+                                col_len = f.read(1)
+                                                             
+                                if col_len == '\0' :
+                                    break
+                                col_len = int(bin(ord(col_len)),2)
+                                traversal += 1
+                                col_name = f.read(col_len)
+                                traversal += col_len
+                                val_type = int(bin(ord(f.read(1))),2)
+                                f.seek(traversal + 1)
+                                val_size = self.byte_to_int(f.read(self.INT_SIZE))
+                                traversal += 1 + self.INT_SIZE
+                                for i in range(0, len(copy_columns)):
+                                    if (col_name) == copy_columns[i]:
+                                        f.seek(traversal)
+                                        #write new value
+                                        if val_type == 0:
+                                            a,b,c,d = self.convert_int(int(copy_news[i]))
+
+                                            f.write(str(chr(d)))
+                                            f.write(str(chr(c)))
+                                            f.write(str(chr(b)))
+                                            f.write(str(chr(a)))
+                                            
+                                                
+                                        else:
+                                            f.write(bytes(copy_news[i]))
+                                                                                    
+                                        copy_columns.remove(col_name)
+                                        del copy_news[i]
+
+                                        break
+                                traversal += val_size
+                                f.seek(traversal)
+                                        
+                            if len(copy_columns) != 0 and insert_flag == 1:
+
+                                f.seek(traversal)
+                                for i in range(0, len(copy_columns)):
+                                    temp_len = len(copy_columns[i])
+                                    a = self.convert_single_byte(temp_len)
+                                    f.write(str(chr(a)))
+                                    f.write(copy_columns[i])
+                                    f.write(str(chr(self.convert_single_byte(2))))
+
+
+                                    a,b,c,d = self.convert_int(len(copy_news[i]))
+
+                                    f.write(str(chr(d)))
+                                    f.write(str(chr(c)))
+                                    f.write(str(chr(b)))
+                                    f.write(str(chr(a)))
+
+                                    traversal += 1 + temp_len + 1 + 4
+                                    f.seek(traversal)
+                                    f.write(copy_news[i])
+                                f.seek(filled_loc)
+                                a,b,c,d = self.convert_int(traversal - filled_start)
+
+                                f.write(str(chr(d)))
+                                f.write(str(chr(c)))
+                                f.write(str(chr(b)))
+                                f.write(str(chr(a)))
+
+
+                    data_start += allocated
+                    start +=allocated
+            return False
 
 
     # for select 
