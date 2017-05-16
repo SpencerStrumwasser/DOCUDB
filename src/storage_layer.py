@@ -344,6 +344,8 @@ class StorageLayer:
                     not_eof = False
                 init_start = start  
                 data_start = 0
+                if size_of_data == 0:
+                    break
                 while start <= init_start + size_of_data:
                     dirty = int(data[data_start])
                     allocated_temp = data[data_start + self.BOOLEAN_SIZE: data_start + self.BOOLEAN_SIZE + self.INT_SIZE]
@@ -352,6 +354,11 @@ class StorageLayer:
 
                         # datakey = data[data_start + self.BOOLEAN_SIZE + 2 * self.INT_SIZE:data_start + self.BOOLEAN_SIZE + 2 * self.INT_SIZE + 30].rstrip('\0')
                         # if datakey in keys:
+                        f.seek(start)   
+                        data_temp = f.read(allocated)
+                    
+                        
+                        document_binary = data_temp
                         doc_data = self.binary_to_doc_data(document_binary)
                         cols = doc_data.user_values_dict
                         if predicate_evaluator.eval_pred(exp, cols) == True:
@@ -411,7 +418,11 @@ class StorageLayer:
                         if str(datakey) in keys:
                             keys.remove(datakey)
                             
-                            document_binary = data[data_start:data_start+allocated]
+                            f.seek(start)   
+                            data_temp = f.read(allocated)
+                        
+                            
+                            document_binary = data_temp
                             doc_data = self.binary_to_doc_data(document_binary)
                             ret.append(doc_data.user_values_dict)
 
@@ -521,8 +532,8 @@ class StorageLayer:
                             f.seek(traversal)
                             filled_loc = start + self.BOOLEAN_SIZE + self.INT_SIZE
                             filled_start = start
-                            copy_columns = columns
-                            copy_news = news
+                            copy_columns = columns[:]
+                            copy_news = news[:]
                             while len(copy_columns) != 0:
                                 col_len = f.read(1)
                                                              
@@ -619,6 +630,8 @@ class StorageLayer:
                     not_eof = False
                 init_start = start  
                 data_start = 0
+                if size_of_data == 0:
+                    break
                 while start <= init_start + size_of_data:
 
                     dirty = int(data[data_start])
@@ -626,18 +639,21 @@ class StorageLayer:
                     allocated = self.byte_to_int(allocated_temp)                    
                     if dirty == 1:
                         # datakey = data[data_start + self.BOOLEAN_SIZE + 2 * self.INT_SIZE:data_start + self.BOOLEAN_SIZE + 2 * self.INT_SIZE + 30].rstrip('\0')
+                        f.seek(start)   
+                        data_temp = f.read(allocated)
+                    
                         
+                        document_binary = data_temp
                         doc_data = self.binary_to_doc_data(document_binary)
                         cols = doc_data.user_values_dict
                         if predicate_evaluator.eval_pred(exp, cols) == True:
 
                             traversal = start + self.BOOLEAN_SIZE + 2 * self.INT_SIZE + 30
-                            keys.remove(datakey)
                             f.seek(traversal)
                             filled_loc = start + self.BOOLEAN_SIZE + self.INT_SIZE
                             filled_start = start
-                            copy_columns = columns
-                            copy_news = news
+                            copy_columns = columns[:]
+                            copy_news = news[:]
                             while len(copy_columns) != 0:
                                 col_len = f.read(1)
                                                              
@@ -735,13 +751,11 @@ class StorageLayer:
 
                 if (size_of_data < self.read_size):
                     not_eof = False
-                if size_of_data == 0:
-                    return False
                 init_start = start
+                if size_of_data == 0:
+                    break
                 data_start = 0  
                 while start <= init_start + size_of_data:
-
-
                     if data[data_start] == '\0':
                         dirty = 0
                     else:   
@@ -752,11 +766,12 @@ class StorageLayer:
                     if dirty == 1:
                         # print keys
                         datakey = data[data_start + self.BOOLEAN_SIZE + 2 * self.INT_SIZE:data_start + self.BOOLEAN_SIZE + 2 * self.INT_SIZE + 30].rstrip('\0')
-                        # print datakey   
-                    
+                        # print datakey
+                        f.seek(start)   
+                        data_temp = f.read(allocated)
                     
                         
-                        document_binary = data[data_start:data_start+allocated]
+                        document_binary = data_temp
                         doc_data = self.binary_to_doc_data(document_binary)
                         cols = doc_data.user_values_dict
                         if predicate_evaluator.eval_pred(exp, cols) == True:

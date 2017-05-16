@@ -1132,31 +1132,41 @@ class Parser:
 
         sl = StorageLayer(filename)
         if self.command.predicate == None:
-            return False
+            print "Upserting All Documents"
+            sl.update_by_predicate(self.command.predicate, self.command.temp_cols, self.command.temp_vals, 1)
+            return
         elif self.command.predicate[:9] == "(_key == ":
-            if self.command.predicate[9] == '"':
+            if self.command.predicate.count('"', 0, len(self.command.predicate)) == 2:
                 for i in range(10, len(self.command.predicate)):
-                    if self.command.predicate[i:i+2] == '")' :
+                    if self.command.predicate[i:i+1] == '"' :
                         key_val = self.command.predicate[10:i]
-                        print "Updating Document for Key: " + key_val
+                        print "Upseting Document for Key: " + key_val
+
                         sl.update_by_keys([key_val.lower()], self.command.temp_cols, self.command.temp_vals, 1)
+                        return
+        print "Upserting All Documents Satisfying Predicate" , self.command.predicate
+        sl.update_by_predicate(self.command.predicate, self.command.temp_cols, self.command.temp_vals, 1)
+    
 
     def __delete_storage_layer(self, filename):
 
         sl = StorageLayer(filename)
         if self.command.predicate == None:
-            return False
+             print "Deleting all documents"
+             sl.delete_by_predicate(self.command.predicate)
+             return
         elif self.command.predicate[:9] == "(_key == ":
-            if self.command.predicate[9] == '"':
+            if self.command.predicate.count('"', 0, len(self.command.predicate)) == 2:
                 for i in range(10, len(self.command.predicate)):
-                    if self.command.predicate[i:i+2] == '")' :
+                    if self.command.predicate[i:i+1] == '"' :
                         key_val = self.command.predicate[10:i]
                         print "Deleting Document for Key: " + key_val
                         sl.delete_by_keys([key_val.lower()])
+                        return
 
-        # ADD THIS TODO
-        # delete_by_predicate(self, exp)
-    
+        print "Deleting All Documents Satisfying Predicate", self.command.predicate
+        sl.delete_by_predicate(self.command.predicate)
+ 
     def __drop_storage_layer(self, filename):
         sl = StorageLayer(filename)
         sl.drop_table()
