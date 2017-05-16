@@ -1,6 +1,6 @@
 import os
 import document
-
+import predicate_evaluator
 
 class StorageLayer:
     '''
@@ -539,6 +539,67 @@ class StorageLayer:
             return False
 
 
+
+
+
+
+    def get_all_tuples(self, exp):
+        '''
+        Gets the documents corresponding to the desired keys. With optional projection
+        
+        input: keys -> List of keys to grab documents for 
+        input: project -> List of columns to project. Empty list means select all
+        return -> todo: what is the return? haha
+
+        '''
+        ret = [] # document.DocumentPresentation(key)
+
+        with open(self.filename, 'rb') as f:
+            start = 0
+            end = start + self.read_size
+            #check if file has anything written
+            not_eof = True
+            if (os.stat(self.filename).st_size == 0):
+                return False
+            while not_eof:
+                f.seek(start)
+                data = f.read(end - start)
+                size_of_data = len(data)
+
+                if (size_of_data < self.read_size):
+                    not_eof = False
+                if size_of_data == 0:
+                    return False
+                init_start = start
+                data_start = 0  
+                while start <= init_start + size_of_data:
+
+
+                    if data[data_start] == '\0':
+                        dirty = 0
+                    else:   
+                        dirty = int(data[data_start])
+
+                    allocated_temp = data[data_start + self.BOOLEAN_SIZE: data_start + self.BOOLEAN_SIZE + self.INT_SIZE]
+                    allocated = self.byte_to_int(allocated_temp)
+                    if dirty == 1:
+                        # print keys
+                        datakey = data[data_start + self.BOOLEAN_SIZE + 2 * self.INT_SIZE:data_start + self.BOOLEAN_SIZE + 2 * self.INT_SIZE + 30].rstrip('\0')
+                        # print datakey   
+                        if str(datakey) in keys:
+                            keys.remove(datakey)
+                            
+                            document_binary = data[data_start:data_start+allocated]
+                            doc_data = self.binary_to_doc_data(document_binary)
+                            cols = doc_data.user_values_dict
+                            if eval_pred(exp, cols) == True:
+                                ret.append(doc_data)
+                    data_start += allocated
+                    start += allocated
+
+            if ret == []:
+                return False
+            return ret
 
 
         

@@ -38,7 +38,8 @@ def eval_pred(exp, cols):
 	'''
 
 	# TODO: add exception handling and security checks
-
+	if exp == '' or exp == None:
+		return True
 	return eval(exp, {}, cols)
 
 
