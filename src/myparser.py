@@ -1021,21 +1021,22 @@ class Parser:
                         print "---------------------------------------------------------------"
                         print "Document Key:" , dicc['_key']
                         for item in proj:
-                            try:
-                                print item, " : ", dicc[item]
-                            except KeyError:
+                            if item != "_key":
                                 try:
-                                    print predicate_evaluator.eval_pred(item, dicc)
-                                except NameError:
-                                    print "Projection", item, "is not possible"
+                                    print item, " : ", dicc[item]
+                                except KeyError:
+                                    try:
+                                        print predicate_evaluator.eval_pred(item, dicc)
+                                    except NameError:
+                                        print "Projection", item, "is not possible"
 
                         print '\n \n'
 
             return
         elif self.command.predicate[:9] == "(_key == ":
-            if self.command.predicate[9] == '"':
+            if self.command.predicate.count('"', 0, len(self.command.predicate)) == 2:
                 for i in range(10, len(self.command.predicate)):
-                    if self.command.predicate[i:i+2] == '")' :
+                    if self.command.predicate[i:i+1] == '"' :
                         key_val = self.command.predicate[10:i]
                         print "Finding Document for Key: " + key_val
                         gettt = sl.get_tuples_by_key([key_val.lower()])
@@ -1060,15 +1061,16 @@ class Parser:
                                     print "---------------------------------------------------------------"
                                     print "Document Key:" , dicc['_key']
                                     for item in proj:
-                                        try:
-                                            print item, " : ", dicc[item]
-                                        except KeyError:
+                                        if item != "_key":
                                             try:
-                                                print predicate_evaluator.eval_pred(item, dicc)
-                                            except NameError:
-                                                print "Projection", item, "is not possible"
+                                                print item, " : ", dicc[item]
+                                            except KeyError:
+                                                try:
+                                                    print predicate_evaluator.eval_pred(item, dicc)
+                                                except NameError:
+                                                    print "Projection", item, "is not possible"
 
-                        print '\n \n'
+                                    print '\n \n'
                         return
     
         print "Finding Document for predicate: " + self.command.predicate
@@ -1094,13 +1096,14 @@ class Parser:
                     print "---------------------------------------------------------------"
                     print "Document Key:" , dicc['_key']
                     for item in proj:
-                        try:
-                            print item, " : ", dicc[item]
-                        except KeyError:
+                        if item != "_key":
                             try:
-                                print predicate_evaluator.eval_pred(item, dicc)
-                            except NameError:
-                                print "Projection", item, "is not possible"
+                                print item, " : ", dicc[item]
+                            except KeyError:
+                                try:
+                                    print predicate_evaluator.eval_pred(item, dicc)
+                                except NameError:
+                                    print "Projection", item, "is not possible"
 
                     print '\n \n'
 
@@ -1109,17 +1112,21 @@ class Parser:
 
         sl = StorageLayer(filename)
         if self.command.predicate == None:
-            return False
+            print "Updating All Documents"
+            sl.update_by_predicate(self.command.predicate, self.command.temp_cols, self.command.temp_vals, 0)
+            return
         elif self.command.predicate[:9] == "(_key == ":
-            if self.command.predicate[9] == '"':
+            if self.command.predicate.count('"', 0, len(self.command.predicate)) == 2:
                 for i in range(10, len(self.command.predicate)):
-                    if self.command.predicate[i:i+2] == '")' :
+                    if self.command.predicate[i:i+1] == '"' :
                         key_val = self.command.predicate[10:i]
                         print "Updating Document for Key: " + key_val
-                        print self.command.temp_cols
-                        print self.command.temp_vals
+
                         sl.update_by_keys([key_val.lower()], self.command.temp_cols, self.command.temp_vals, 0)
-                        
+                        return
+        print "Updating All Documents Satisfying Predicate" , self.command.predicate
+        sl.update_by_predicate(self.command.predicate, self.command.temp_cols, self.command.temp_vals, 0)
+            
 
     def __upsert_storage_layer(self, filename):
 
