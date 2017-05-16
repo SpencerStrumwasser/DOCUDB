@@ -1153,6 +1153,9 @@ class Parser:
                         key_val = self.command.predicate[10:i]
                         print "Deleting Document for Key: " + key_val
                         sl.delete_by_keys([key_val.lower()])
+
+        # ADD THIS TODO
+        # delete_by_predicate(self, exp)
     
     def __drop_storage_layer(self, filename):
         sl = StorageLayer(filename)
@@ -1174,6 +1177,13 @@ class Parser:
         if verb == 'create':
             with open(filename, 'wb') as f:
                 f.close()
+
+        # Check if colleciton exists
+        sl = StorageLayer(filename)
+        if sl.no_file == True:
+            return False
+
+
         if verb == 'insert':
             self.__insert_storage_layer(filename)
         elif verb == 'select':

@@ -281,6 +281,8 @@ class StorageLayer:
         '''
         todo: write methdo summary
 
+        deletes whole document
+
         input: keys ->
         return ->
 
@@ -312,6 +314,52 @@ class StorageLayer:
                             f.write('0')
                     if len(keys) == 0:
                         return True
+                    data_start += allocated
+                    start +=allocated
+            return False
+
+
+    def delete_by_predicate(self, exp):
+        '''
+        todo: write methdo summary
+
+        deletes whole document
+
+        input: keys ->
+        return ->
+
+        '''
+        with open(self.filename, 'r+b') as f:
+            start = 0
+            end = start + self.read_size
+            #check if file has anything written
+            not_eof = True
+            if (os.stat(self.filename).st_size == 0):
+                return False
+            while not_eof:
+                f.seek(start)
+                data = f.read(end - start)
+                size_of_data = len(data)
+                if (size_of_data < self.read_size):
+                    not_eof = False
+                init_start = start  
+                data_start = 0
+                while start <= init_start + size_of_data:
+                    dirty = int(data[data_start])
+                    allocated_temp = data[data_start + self.BOOLEAN_SIZE: data_start + self.BOOLEAN_SIZE + self.INT_SIZE]
+                    allocated = self.byte_to_int(allocated_temp)
+                    if dirty == 1:
+
+                        # datakey = data[data_start + self.BOOLEAN_SIZE + 2 * self.INT_SIZE:data_start + self.BOOLEAN_SIZE + 2 * self.INT_SIZE + 30].rstrip('\0')
+                        # if datakey in keys:
+                        doc_data = self.binary_to_doc_data(document_binary)
+                        cols = doc_data.user_values_dict
+                        if predicate_evaluator.eval_pred(exp, cols) == True:
+                            # keys.remove(datakey)
+                            f.seek(start)
+                            f.write('0')
+                    # if len(keys) == 0:
+                    #     return True
                     data_start += allocated
                     start +=allocated
             return False
@@ -577,11 +625,9 @@ class StorageLayer:
                     allocated_temp = data[data_start + self.BOOLEAN_SIZE: data_start + self.BOOLEAN_SIZE + self.INT_SIZE]
                     allocated = self.byte_to_int(allocated_temp)                    
                     if dirty == 1:
-                        datakey = data[data_start + self.BOOLEAN_SIZE + 2 * self.INT_SIZE:data_start + self.BOOLEAN_SIZE + 2 * self.INT_SIZE + 30].rstrip('\0')
+                        # datakey = data[data_start + self.BOOLEAN_SIZE + 2 * self.INT_SIZE:data_start + self.BOOLEAN_SIZE + 2 * self.INT_SIZE + 30].rstrip('\0')
                         
                         doc_data = self.binary_to_doc_data(document_binary)
-                        # todo here
-
                         cols = doc_data.user_values_dict
                         if predicate_evaluator.eval_pred(exp, cols) == True:
 
