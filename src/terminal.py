@@ -1,5 +1,8 @@
 import myparser
+import os
 
+# TODO: repeated in storage layer: consolidate
+ROOT_DATA_DIRECTORY = '../data' # Where the tables at
 
 
 print 'Hello. Welcome to the DocuDB Terminal...'
@@ -20,6 +23,10 @@ while(True):
 	elif user_input == 'hello':
 		print 'Hi'	
 
+	elif user_input == 'show dbs':
+		files = os.listdir(ROOT_DATA_DIRECTORY)
+		for f in files:
+			print '\t' + f[:-3] # strip the .es file extension
 
 	elif user_input != '':
 		if user_input[0] == '-' and user_input[1] == '-':

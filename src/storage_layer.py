@@ -69,7 +69,10 @@ class StorageLayer:
     CHAR_SIZE = 1
     BOOLEAN_SIZE = 1
     VAL_TYPE_MAP = {0 : 'int' , 1 : 'dec', 2 : 'char', 3 : 'bool'}
-    ROOT_DATA_DIRECTORY = '/Users/Spencer/CS123/DOCUDB/table_data' # Where the tables at
+
+    # TODO: defined in terminal also.
+    ROOT_DATA_DIRECTORY = '../data' # Where the tables at
+
 
     def __init__(self, filename, read_size=4069):
         '''

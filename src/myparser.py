@@ -834,6 +834,130 @@ class Parser:
     def __drop_end(self, token_list, idx):
         return
 
+
+    def __process_cmd(self):
+        '''
+        Called after __start_parse. Does additional processing to prepare the 
+        command for execution
+
+        Gets the command.json_doc or command.update attributes ready 
+        Also checks for language constraint violations
+
+        * Column name constraints for insert are checked in docudb_json_translator/docudb_update_translator
+        '''
+
+        # todo delete
+        # print '__process_cmd() called'
+        # print ''
+        # #
+
+        # Process self.command.json_doc if necessary - insert
+        if self.command.verb == 'insert':
+            ins_dict = docudb_json_translator.json_to_dict(self.command.json_doc)  
+            if len(ins_dict) != 0: # len0 signals that an error has occured 
+                self.command.json_doc = ins_dict
+            else:
+                self.command.invalid = True
+                print 'Error in json parse' # todo delete
+                return 
+
+            # todo delete
+            print 'the insert json:'
+            print self.command.json_doc
+            print ''
+            #
+
+        # Process self.command.update if necessary - update/upsert
+        if self.command.verb == 'update' or self.command.verb == 'upsert':
+             #  {'update_dict' : update_dict, 'cols' : cols, 'vals' : vals}
+            upd_dict = docudb_update_translator.strlists_to_dict(self.command.temp_cols, self.command.temp_vals)
+            if len(upd_dict['update_dict']) != 0: # len 0 signals an error occurred 
+                self.command.update = upd_dict['update_dict']
+                self.command.temp_cols = upd_dict['cols']
+                self.command.temp_vals = upd_dict['vals']
+            else:
+                self.command.invalid = True
+                print 'Error in update format'
+                return 
+
+            # todo delete
+            print 'the update dict:'
+            print self.command.update
+            print ''
+            #
+
+        # TODO: probably cannot check this
+        # All expressions with 2 or more elements enclosed with ()
+        
+
+        # Key:
+        #   - only strings -> enclosed by quotes 
+        #   - max length == 30
+        #   - cannot be a language keyword or operator
+        if self.command.verb == 'insert':
+            if self.command.insert_key_name[0] != '"' or self.command.insert_key_name [-1] != '"':
+                print 'Syntax Error: Key should be enclosed by quotes: ' + str(self.command.insert_key_name)
+                self.command.invalid = True
+                return            
+            self.command.insert_key_name = self.command.insert_key_name[1:-1] # strip quotes
+            if self.command.insert_key_name in LANGUAGE_KEYWORDS.union(WORD_OPERATORS):
+                print 'Syntax Error: Key cannot be a keyword or operator: ' + str(self.command.insert_key_name)
+                self.command.invalid = True
+                return
+            if len(self.command.insert_key_name) >= 30 or len(self.command.insert_key_name) == 0:
+                print 'Syntax Error: Key must be at least 1 and max 30 chars long: ' + str(self.command.insert_key_name)
+                self.command.invalid = True
+                return            
+
+
+
+        # Collection names:
+        #   - todo: define length constraint
+        #   - only consists of alpha-numeric and '_'
+        #   - has to start with a-z
+        #   - cannot be a language keyword or operator, or '_key'
+        if len(self.command.collection) == 0:
+            print 'Parsing Error: Collection with empty name'
+            self.command.invalid = True
+            return
+        for ch in self.command.collection:
+            if not ch.isalnum() and ch != '_':
+                print 'Syntax Error: Collection names can only contain A-Z, a-z, 0-9, and _'
+                self.command.invalid = True
+                return
+        if not self.command.collection[0].isalpha():
+            print 'Syntax Error: Collection names must start with alphabetical char.'
+            self.command.invalid = True
+            return 
+        if self.command.collection in LANGUAGE_KEYWORDS.union(WORD_OPERATORS):
+            print 'Syntax Error: Collection name cannot be a keyword or operator: ' + str(self.command.collection)
+            self.command.invalid = True
+            return
+
+        # todo. there are probably  other constraints... esp semantic ones
+        
+        # print self.command.to_string()
+        
+    # Helper functions
+
+    def __at_invalid_idx(self, token_list, idx):
+        '''
+        True if idx is out of bounds
+        '''
+        return len(token_list) <= idx
+
+    def __tokens_to_str(self, token_list):
+        ret = ''
+        for t in token_list:
+            ret += t
+            ret += ' '
+        return ret
+
+
+    ######################################################################
+    ######################################################################
+    ######################################################################
+
     def __insert_storage_layer(self, filename):
 
         sl = StorageLayer(filename)
@@ -962,130 +1086,123 @@ class Parser:
 
 
 
-    def __process_cmd(self):
-        '''
-        Called after __start_parse. Does additional processing to prepare the 
-        command for execution
+    # def __process_cmd(self):
+    #     '''
+    #     Called after __start_parse. Does additional processing to prepare the 
+    #     command for execution
 
-        Gets the command.json_doc or command.update attributes ready 
-        Also checks for language constraint violations
+    #     Gets the command.json_doc or command.update attributes ready 
+    #     Also checks for language constraint violations
 
-        * Column name constraints for insert are checked in docudb_json_translator/docudb_update_translator
-        '''
+    #     * Column name constraints for insert are checked in docudb_json_translator/docudb_update_translator
+    #     '''
 
-        # todo delete
-        # print '__process_cmd() called'
-        # print ''
-        # #
+    #     # todo delete
+    #     # print '__process_cmd() called'
+    #     # print ''
+    #     # #
 
-        # Process self.command.json_doc if necessary - insert
-        if self.command.verb == 'insert':
-            ins_dict = docudb_json_translator.json_to_dict(self.command.json_doc)  
-            if len(ins_dict) != 0: # len0 signals that an error has occured 
-                self.command.json_doc = ins_dict
-            else:
-                self.command.invalid = True
-                print 'Error in json parse' # todo delete
-                return 
+    #     # Process self.command.json_doc if necessary - insert
+    #     if self.command.verb == 'insert':
+    #         ins_dict = docudb_json_translator.json_to_dict(self.command.json_doc)  
+    #         if len(ins_dict) != 0: # len0 signals that an error has occured 
+    #             self.command.json_doc = ins_dict
+    #         else:
+    #             self.command.invalid = True
+    #             print 'Error in json parse' # todo delete
+    #             return 
 
-            # todo delete
-            print 'the insert json:'
-            print self.command.json_doc
-            print ''
-            #
+    #         # todo delete
+    #         print 'the insert json:'
+    #         print self.command.json_doc
+    #         print ''
+    #         #
 
-        # Process self.command.update if necessary - update/upsert
-        if self.command.verb == 'update' or self.command.verb == 'upsert':
-             #  {'update_dict' : update_dict, 'cols' : cols, 'vals' : vals}
-            upd_dict = docudb_update_translator.strlists_to_dict(self.command.temp_cols, self.command.temp_vals)
-            if len(upd_dict['update_dict']) != 0: # len 0 signals an error occurred 
-                self.command.update = upd_dict['update_dict']
-                self.command.temp_cols = upd_dict['cols']
-                self.command.temp_vals = upd_dict['vals']
-            else:
-                self.command.invalid = True
-                print 'Error in update format'
-                return 
+    #     # Process self.command.update if necessary - update/upsert
+    #     if self.command.verb == 'update' or self.command.verb == 'upsert':
+    #          #  {'update_dict' : update_dict, 'cols' : cols, 'vals' : vals}
+    #         upd_dict = docudb_update_translator.strlists_to_dict(self.command.temp_cols, self.command.temp_vals)
+    #         if len(upd_dict['update_dict']) != 0: # len 0 signals an error occurred 
+    #             self.command.update = upd_dict['update_dict']
+    #             self.command.temp_cols = upd_dict['cols']
+    #             self.command.temp_vals = upd_dict['vals']
+    #         else:
+    #             self.command.invalid = True
+    #             print 'Error in update format'
+    #             return 
 
-            # todo delete
-            print 'the update dict:'
-            print self.command.update
-            print ''
-            #
+    #         # todo delete
+    #         print 'the update dict:'
+    #         print self.command.update
+    #         print ''
+    #         #
 
-        # TODO: probably cannot check this
-        # All expressions with 2 or more elements enclosed with ()
+    #     # TODO: probably cannot check this
+    #     # All expressions with 2 or more elements enclosed with ()
         
 
-        # Key:
-        #   - only strings -> enclosed by quotes 
-        #   - max length == 30
-        #   - cannot be a language keyword or operator
-        if self.command.verb == 'insert':
-            if self.command.insert_key_name[0] != '"' or self.command.insert_key_name [-1] != '"':
-                print 'Syntax Error: Key should be enclosed by quotes: ' + str(self.command.insert_key_name)
-                self.command.invalid = True
-                return            
-            self.command.insert_key_name = self.command.insert_key_name[1:-1] # strip quotes
-            if self.command.insert_key_name in LANGUAGE_KEYWORDS.union(WORD_OPERATORS):
-                print 'Syntax Error: Key cannot be a keyword or operator: ' + str(self.command.insert_key_name)
-                self.command.invalid = True
-                return
-            if len(self.command.insert_key_name) >= 30 or len(self.command.insert_key_name) == 0:
-                print 'Syntax Error: Key must be at least 1 and max 30 chars long: ' + str(self.command.insert_key_name)
-                self.command.invalid = True
-                return            
+    #     # Key:
+    #     #   - only strings -> enclosed by quotes 
+    #     #   - max length == 30
+    #     #   - cannot be a language keyword or operator
+    #     if self.command.verb == 'insert':
+    #         if self.command.insert_key_name[0] != '"' or self.command.insert_key_name [-1] != '"':
+    #             print 'Syntax Error: Key should be enclosed by quotes: ' + str(self.command.insert_key_name)
+    #             self.command.invalid = True
+    #             return            
+    #         self.command.insert_key_name = self.command.insert_key_name[1:-1] # strip quotes
+    #         if self.command.insert_key_name in LANGUAGE_KEYWORDS.union(WORD_OPERATORS):
+    #             print 'Syntax Error: Key cannot be a keyword or operator: ' + str(self.command.insert_key_name)
+    #             self.command.invalid = True
+    #             return
+    #         if len(self.command.insert_key_name) >= 30 or len(self.command.insert_key_name) == 0:
+    #             print 'Syntax Error: Key must be at least 1 and max 30 chars long: ' + str(self.command.insert_key_name)
+    #             self.command.invalid = True
+    #             return            
 
 
 
-        # Collection names:
-        #   - todo: define length constraint
-        #   - only consists of alpha-numeric and '_'
-        #   - has to start with a-z
-        #   - cannot be a language keyword or operator, or '_key'
-        if len(self.command.collection) == 0:
-            print 'Parsing Error: Collection with empty name'
-            self.command.invalid = True
-            return
-        for ch in self.command.collection:
-            if not ch.isalnum() and ch != '_':
-                print 'Syntax Error: Collection names can only contain A-Z, a-z, 0-9, and _'
-                self.command.invalid = True
-                return
-        if not self.command.collection[0].isalpha():
-            print 'Syntax Error: Collection names must start with alphabetical char.'
-            self.command.invalid = True
-            return 
-        if self.command.collection in LANGUAGE_KEYWORDS.union(WORD_OPERATORS):
-            print 'Syntax Error: Collection name cannot be a keyword or operator: ' + str(self.command.collection)
-            self.command.invalid = True
-            return
+    #     # Collection names:
+    #     #   - todo: define length constraint
+    #     #   - only consists of alpha-numeric and '_'
+    #     #   - has to start with a-z
+    #     #   - cannot be a language keyword or operator, or '_key'
+    #     if len(self.command.collection) == 0:
+    #         print 'Parsing Error: Collection with empty name'
+    #         self.command.invalid = True
+    #         return
+    #     for ch in self.command.collection:
+    #         if not ch.isalnum() and ch != '_':
+    #             print 'Syntax Error: Collection names can only contain A-Z, a-z, 0-9, and _'
+    #             self.command.invalid = True
+    #             return
+    #     if not self.command.collection[0].isalpha():
+    #         print 'Syntax Error: Collection names must start with alphabetical char.'
+    #         self.command.invalid = True
+    #         return 
+    #     if self.command.collection in LANGUAGE_KEYWORDS.union(WORD_OPERATORS):
+    #         print 'Syntax Error: Collection name cannot be a keyword or operator: ' + str(self.command.collection)
+    #         self.command.invalid = True
+    #         return
 
+    #     # todo. there are probably  other constraints... esp semantic ones
 
-
-        # todo. there are probably  other constraints... esp semantic ones
-
-
-
-        # print self.command.to_string()
+    #     # print self.command.to_string()
         
+    # # Helper functions
 
+    # def __at_invalid_idx(self, token_list, idx):
+    #     '''
+    #     True if idx is out of bounds
+    #     '''
+    #     return len(token_list) <= idx
 
-
-    # Helper functions
-
-    def __at_invalid_idx(self, token_list, idx):
-        '''
-        True if idx is out of bounds
-        '''
-        return len(token_list) <= idx
-
-    def __tokens_to_str(self, token_list):
-        ret = ''
-        for t in token_list:
-            ret += t
-            ret += ' '
-        return ret
+    # def __tokens_to_str(self, token_list):
+    #     ret = ''
+    #     for t in token_list:
+    #         ret += t
+    #         ret += ' '
+    #     return ret
 
 
 #### FOR TESTING
