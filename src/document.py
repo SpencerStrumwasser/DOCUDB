@@ -26,12 +26,12 @@ class DocumentData:
 		self.filled_size = filled_size
 		self.key_name = key_name
 		self.values = {}
-		self.user_values_dict = {}
+		self.user_values_dict = {} # just the values for display. no storage layer info
 		self.values_order = None # TODO1: implement later
 
 	def add_value(self, col_name, col_name_len, val_type, val_size, val):
 		self.values[col_name] = self.ValueData(col_name_len, val_type, val_size, val)
-		self.values[col_name] = val
+		self.user_values_dict[col_name] = val
 
 
 class DocumentPresentation:

@@ -1,6 +1,7 @@
 import document
 from document import DocumentData
 from storage_layer import StorageLayer
+
 import docudb_json_translator
 import docudb_update_translator
 
@@ -1051,7 +1052,10 @@ class Parser:
                         key_val = self.command.predicate[10:i]
                         print "Deleting Document for Key: " + key_val
                         sl.delete_by_keys([key_val.lower()])
-                        
+    
+    def __drop_storage_layer(self, filename):
+        sl = StorageLayer(filename)
+        sl.drop_table()
 
 
 
@@ -1065,6 +1069,7 @@ class Parser:
 
         verb = self.command.verb
         filename = "../data/" + str(self.command.collection) + ".es"
+
         if verb == 'create':
             with open(filename, 'wb') as f:
                 f.close()
@@ -1078,6 +1083,8 @@ class Parser:
             self.__upsert_storage_layer(filename)
         elif verb == 'delete':
             self.__delete_storage_layer(filename)
+        elif verb == 'drop':
+            self.__drop_storage_layer(filename)
 
 
         return True

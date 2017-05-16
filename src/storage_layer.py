@@ -2,6 +2,9 @@ import os
 import document
 import predicate_evaluator
 
+
+# TODO: maybe make a static class. seems unecesary and waste of space to make new instanece for each new filename
+
 class StorageLayer:
     '''
     Code for manipulating the data at a low level.
@@ -80,6 +83,11 @@ class StorageLayer:
         '''
         self.read_size = read_size
         self.filename = filename
+        self.no_file = False
+
+        if not os.path.isfile(self.filename):
+            print 'Error: the file ' + self.filename + ' does not exist'
+            self.no_file = True
 
 
     def byte_to_int(self, byte):
@@ -542,7 +550,7 @@ class StorageLayer:
 
 
 
-
+    # for select 
     def get_all_tuples(self, exp):
         '''
         Gets the documents corresponding to the desired keys. With optional projection
@@ -601,6 +609,15 @@ class StorageLayer:
                 return False
             return ret
 
+
+    def drop_table(self):
+        '''
+        ROOT_DIRECTORY is already appended to filename when passed in from myparser
+        '''
+        if os.path.isfile(self.filename):
+            os.remove(self.filename)
+        else:
+            print 'Error: The collection file ' + self.filename + ' you are trying to remove don\'t exist.'
 
         
 
