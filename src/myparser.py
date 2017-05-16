@@ -3,7 +3,7 @@ from document import DocumentData
 from storage_layer import StorageLayer
 import docudb_json_translator
 import docudb_update_translator
-
+import predicate_evaluator
 from keywords import LANGUAGE_KEYWORDS
 from keywords import OPERATORS
 from keywords import WORD_OPERATORS
@@ -878,13 +878,33 @@ class Parser:
             if gettt == False:
                 print "No Documents Exists"
             else:
-                for dicc in gettt:
-                    print "\n \n" 
-                    for key in dicc:
-                        if key == '_key':
-                            print "Document :" , dicc[key]
-                        else: 
-                            print key, " : ", dicc[key]
+                proj = self.command.projection
+                if proj == []:
+                    print "\n \n Documents Selected: \n"
+                    for dicc in gettt:
+                        print "---------------------------------------------------------------"
+                        print "Document Key:" , dicc['_key']
+                        for key in dicc:
+                            if key == '_key':
+                                continue
+                            else: 
+                                print key, " : ", dicc[key]
+                        print '\n \n'
+                else:
+                    print "\n \n Documents Selected: \n"
+                    for dicc in gettt:
+                        print "---------------------------------------------------------------"
+                        print "Document Key:" , dicc['_key']
+                        for item in proj:
+                            try:
+                                print item, " : ", dicc[item]
+                            except KeyError:
+                                try:
+                                    print predicate_evaluator.eval_pred(item, dicc)
+                                except NameError:
+                                    print "Projection", item, "is not possible"
+
+                        print '\n \n'
 
             return
         elif self.command.predicate[:9] == "(_key == ":
@@ -897,13 +917,33 @@ class Parser:
                         if gettt == False:
                             print "No Document Exists For This Key"
                         else:
-                            for dicc in gettt:
-                                print "\n \n" 
-                                for key in dicc:
-                                    if key == '_key':
-                                        print "Document :" , dicc[key]
-                                    else: 
-                                        print key, " : ", dicc[key]
+                            proj = self.command.projection
+                            if proj == []:
+                                print "\n \n Documents Selected: \n"
+                                for dicc in gettt:
+                                    print "---------------------------------------------------------------"
+                                    print "Document Key:" , dicc['_key']
+                                    for key in dicc:
+                                        if key == '_key':
+                                            continue
+                                        else: 
+                                            print key, " : ", dicc[key]
+                                    print '\n \n'
+                            else:
+                                print "\n \n Documents Selected: \n"
+                                for dicc in gettt:
+                                    print "---------------------------------------------------------------"
+                                    print "Document Key:" , dicc['_key']
+                                    for item in proj:
+                                        try:
+                                            print item, " : ", dicc[item]
+                                        except KeyError:
+                                            try:
+                                                print predicate_evaluator.eval_pred(item, dicc)
+                                            except NameError:
+                                                print "Projection", item, "is not possible"
+
+                        print '\n \n'
                         return
     
         print "Finding Document for predicate: " + self.command.predicate
@@ -911,13 +951,33 @@ class Parser:
         if gettt == False:
             print "No Document Exists For This Predicate"
         else:
-            for dicc in gettt:
-                print "\n \n" 
-                for key in dicc:
-                    if key == '_key':
-                        print "Document :" , dicc[key]
-                    else: 
-                        print key, " : ", dicc[key]
+            proj = self.command.projection
+            if proj == []:
+                print "\n \n Documents Selected: \n"
+                for dicc in gettt:
+                    print "---------------------------------------------------------------"
+                    print "Document Key:" , dicc['_key']
+                    for key in dicc:
+                        if key == '_key':
+                            continue
+                        else: 
+                            print key, " : ", dicc[key]
+                    print '\n \n'
+            else:
+                print "\n \n Documents Selected: \n"
+                for dicc in gettt:
+                    print "---------------------------------------------------------------"
+                    print "Document Key:" , dicc['_key']
+                    for item in proj:
+                        try:
+                            print item, " : ", dicc[item]
+                        except KeyError:
+                            try:
+                                print predicate_evaluator.eval_pred(item, dicc)
+                            except NameError:
+                                print "Projection", item, "is not possible"
+
+                    print '\n \n'
 
 
     def __update_storage_layer(self, filename):
