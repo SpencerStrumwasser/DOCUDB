@@ -86,7 +86,7 @@ def __make_dict(cols, vals, cur_dict):
         elif val_tok.isdigit():
             int_val = int(val_tok)
             # 4 bytes -> 32 bits for storing int. 1 bit for +/-
-            if abs(int_val) >= 2^31:
+            if abs(int_val) >= 2**31:
                 print 'Update Syntax Error: int values range from (-2147483647, 2147483647). 32 bit storage space'
                 cur_dict.clear()
                 return
