@@ -398,7 +398,7 @@ class StorageLayer:
                 if (size_of_data < self.read_size):
                     not_eof = False
                 if size_of_data == 0:
-                    return False
+                    break
                 init_start = start
                 data_start = 0  
                 while start <= init_start + size_of_data:

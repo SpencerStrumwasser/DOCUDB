@@ -35,6 +35,8 @@ def generate_inserts(collection_name, num_docs, min_cols=1, max_cols=10, max_int
 
 	return: (string with queries, list of dictionaries corresponding to inserted docs)
 	'''
+	print max_int
+
 
 	assert type(collection_name) == str
 	assert type(num_docs) == int

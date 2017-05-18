@@ -1037,45 +1037,45 @@ class Parser:
                         print '\n \n'
 
             return
-        elif self.command.predicate[:9] == "(_key == ":
-            if self.command.predicate.count('"', 0, len(self.command.predicate)) == 2:
-                for i in range(10, len(self.command.predicate)):
-                    if self.command.predicate[i:i+1] == '"' :
-                        key_val = self.command.predicate[10:i]
-                        print "Finding Document for Key: " + key_val
-                        gettt = sl.get_tuples_by_key([key_val.lower()])
-                        if gettt == False:
-                            print "No Document Exists For This Key"
-                        else:
-                            proj = self.command.projection
-                            if proj == []:
-                                print "\n \n Documents Selected: \n"
-                                for dicc in gettt:
-                                    print "---------------------------------------------------------------"
-                                    print "Document Key:" , dicc['_key']
-                                    for key in dicc:
-                                        if key == '_key':
-                                            continue
-                                        else: 
-                                            print key, " : ", dicc[key]
-                                    print '\n \n'
-                            else:
-                                print "\n \n Documents Selected: \n"
-                                for dicc in gettt:
-                                    print "---------------------------------------------------------------"
-                                    print "Document Key:" , dicc['_key']
-                                    for item in proj:
-                                        if item != "_key":
-                                            try:
-                                                print item, " : ", dicc[item]
-                                            except KeyError:
-                                                try:
-                                                    print predicate_evaluator.eval_pred(item, dicc)
-                                                except NameError:
-                                                    print "Projection", item, "is not possible"
+        # elif self.command.predicate[:9] == "(_key == ":
+        #     if self.command.predicate.count('"', 0, len(self.command.predicate)) == 2:
+        #         for i in range(10, len(self.command.predicate)):
+        #             if self.command.predicate[i:i+1] == '"' :
+        #                 key_val = self.command.predicate[10:i]
+        #                 print "Finding Document for Key: " + key_val
+        #                 gettt = sl.get_tuples_by_key([key_val.lower()])
+        #                 if gettt == False:
+        #                     print "No Document Exists For This Key"
+        #                 else:
+        #                     proj = self.command.projection
+        #                     if proj == []:
+        #                         print "\n \n Documents Selected: \n"
+        #                         for dicc in gettt:
+        #                             print "---------------------------------------------------------------"
+        #                             print "Document Key:" , dicc['_key']
+        #                             for key in dicc:
+        #                                 if key == '_key':
+        #                                     continue
+        #                                 else: 
+        #                                     print key, " : ", dicc[key]
+        #                             print '\n \n'
+        #                     else:
+        #                         print "\n \n Documents Selected: \n"
+        #                         for dicc in gettt:
+        #                             print "---------------------------------------------------------------"
+        #                             print "Document Key:" , dicc['_key']
+        #                             for item in proj:
+        #                                 if item != "_key":
+        #                                     try:
+        #                                         print item, " : ", dicc[item]
+        #                                     except KeyError:
+        #                                         try:
+        #                                             print predicate_evaluator.eval_pred(item, dicc)
+        #                                         except NameError:
+        #                                             print "Projection", item, "is not possible"
 
-                                    print '\n \n'
-                        return
+        #                             print '\n \n'
+        #                 return
     
         print "Finding Document for predicate: " + self.command.predicate
         gettt = sl.get_all_tuples(self.command.predicate)
@@ -1119,15 +1119,15 @@ class Parser:
             print "Updating All Documents"
             sl.update_by_predicate(self.command.predicate, self.command.temp_cols, self.command.temp_vals, 0)
             return
-        elif self.command.predicate[:9] == "(_key == ":
-            if self.command.predicate.count('"', 0, len(self.command.predicate)) == 2:
-                for i in range(10, len(self.command.predicate)):
-                    if self.command.predicate[i:i+1] == '"' :
-                        key_val = self.command.predicate[10:i]
-                        print "Updating Document for Key: " + key_val
+        # elif self.command.predicate[:9] == "(_key == ":
+        #     if self.command.predicate.count('"', 0, len(self.command.predicate)) == 2:
+        #         for i in range(10, len(self.command.predicate)):
+        #             if self.command.predicate[i:i+1] == '"' :
+        #                 key_val = self.command.predicate[10:i]
+        #                 print "Updating Document for Key: " + key_val
 
-                        sl.update_by_keys([key_val.lower()], self.command.temp_cols, self.command.temp_vals, 0)
-                        return
+        #                 sl.update_by_keys([key_val.lower()], self.command.temp_cols, self.command.temp_vals, 0)
+        #                 return
         print "Updating All Documents Satisfying Predicate" , self.command.predicate
         sl.update_by_predicate(self.command.predicate, self.command.temp_cols, self.command.temp_vals, 0)
             
@@ -1139,15 +1139,15 @@ class Parser:
             print "Upserting All Documents"
             sl.update_by_predicate(self.command.predicate, self.command.temp_cols, self.command.temp_vals, 1)
             return
-        elif self.command.predicate[:9] == "(_key == ":
-            if self.command.predicate.count('"', 0, len(self.command.predicate)) == 2:
-                for i in range(10, len(self.command.predicate)):
-                    if self.command.predicate[i:i+1] == '"' :
-                        key_val = self.command.predicate[10:i]
-                        print "Upseting Document for Key: " + key_val
+        # elif self.command.predicate[:9] == "(_key == ":
+        #     if self.command.predicate.count('"', 0, len(self.command.predicate)) == 2:
+        #         for i in range(10, len(self.command.predicate)):
+        #             if self.command.predicate[i:i+1] == '"' :
+        #                 key_val = self.command.predicate[10:i]
+        #                 print "Upseting Document for Key: " + key_val
 
-                        sl.update_by_keys([key_val.lower()], self.command.temp_cols, self.command.temp_vals, 1)
-                        return
+        #                 sl.update_by_keys([key_val.lower()], self.command.temp_cols, self.command.temp_vals, 1)
+        #                 return
         print "Upserting All Documents Satisfying Predicate" , self.command.predicate
         sl.update_by_predicate(self.command.predicate, self.command.temp_cols, self.command.temp_vals, 1)
     
@@ -1159,14 +1159,14 @@ class Parser:
              print "Deleting all documents"
              sl.delete_by_predicate(self.command.predicate)
              return
-        elif self.command.predicate[:9] == "(_key == ":
-            if self.command.predicate.count('"', 0, len(self.command.predicate)) == 2:
-                for i in range(10, len(self.command.predicate)):
-                    if self.command.predicate[i:i+1] == '"' :
-                        key_val = self.command.predicate[10:i]
-                        print "Deleting Document for Key: " + key_val
-                        sl.delete_by_keys([key_val.lower()])
-                        return
+        # elif self.command.predicate[:9] == "(_key == ":
+        #     if self.command.predicate.count('"', 0, len(self.command.predicate)) == 2:
+        #         for i in range(10, len(self.command.predicate)):
+        #             if self.command.predicate[i:i+1] == '"' :
+        #                 key_val = self.command.predicate[10:i]
+        #                 print "Deleting Document for Key: " + key_val
+        #                 sl.delete_by_keys([key_val.lower()])
+        #                 return
 
         print "Deleting All Documents Satisfying Predicate", self.command.predicate
         sl.delete_by_predicate(self.command.predicate)
