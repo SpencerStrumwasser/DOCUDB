@@ -1,0 +1,37 @@
+create demodbper
+--
+insert into demodbper "John" {age: 20, sex: "Male", job: "None", Salary: 0, Friends: 5, Quote: "I love having no job"}
+--
+insert into demodbper "Jim" {age: 25, sex:"male", job: "Teacher", Salary: 25000, Friends: 50, Quote: "I love my job"}
+--
+insert into demodbper "Bob" {age: 45, sex:"male", job: "CEO", Salary: 2000000, Friends: 0, Quote: "My job is stressful"}
+--
+insert into demodbper "Pat" {age: 75, sex: "female", job: "Grandmother", FavoriteFood: "Pie", Grandchildren: 13, pet : "dog"}
+--
+insert into demodbper "Shirley" {age: 50, sex: "female", job: "CFO", Children: 2}
+--
+insert into demodbper "George" {age: 12, sex: "male", job: "Child", Father: "Mark", Mother: "Shirley", FavoriteGame: "Skyrim", FavoriteNumber: 3.14}
+--
+insert into demodbper "Mark" {age: 48, sex: "male", favoriteGame: "Mario"}
+--
+insert into demodbper "Ethan" {age: 20, sex: "male", smart: "T", school: "Caltech",  Major: "CS"}
+--
+insert into demodbper "Spencer" {age: 20, sex: "male", smart: "T", school: "Caltech",  Major: "CS"}
+--
+insert into demodbper "Trent" {age: 18, sex: "male", smart: "F", school: "MIT",  Major: "Polital Science"}
+--
+insert into demodbper "Lily" {age: 18, sex: "female", smart: "F", school: "Stanford",  Major: "Business"}
+--
+insert into demodbper "Ashley" {age: 18, sex: "female", smart: "F", school: "Harvard",  Major: "Arts and Crafts"}
+--
+--
+--
+create demodbcol
+--
+insert into demodbcol "Caltech" {School: "T", Rank: 1, Students: 1000, KnownFor: "STEM"}
+--
+insert into demodbcol "Stanford" {School: "T", Rank: 3, Students: 30000, KnownFor: "Everything"}
+--
+insert into demodbcol "MIT" {School: "T", Rank: 2, Students: 20000, KnownFor: "Engineering"}
+--
+insert into demodbcol "Harvard" {School: "T", Rank: 4, Students: 20000, association: "Ivy League"}
