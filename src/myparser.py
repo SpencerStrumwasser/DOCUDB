@@ -192,7 +192,9 @@ class Parser:
 
             # Insert specific
             self.insert_key_name = None # Key value for the document to be inserted
-            self.json_doc = None
+            self.json_doc = None    # Special notes:
+                                    #   Document reference cols are tuples (collection, key)
+                                    #   Embedded docs are nested dictionaries
 
             # Update/upsert specific
             self.update = {} # dictionary containing the updates: eg -> 

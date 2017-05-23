@@ -45,7 +45,7 @@ def json_to_dict(json_string):
 
     return ret_dict
 
-def __parse(tokens, idx, cur_dict):
+def __parse(tokens, idx, cur_dict, is_embedded_doc_parse=False):
 
     if __at_invalid_idx(tokens, idx):
         print 'JSON formatting error: Literally empty'
@@ -55,7 +55,7 @@ def __parse(tokens, idx, cur_dict):
     cur_tok = tokens[idx]
 
     if cur_tok == '{':
-        __col_val(tokens, idx + 1, cur_dict)
+        __col_val(tokens, idx + 1, cur_dict, is_embedded_doc_parse)
 
     else:
         pass
@@ -66,7 +66,7 @@ def __parse(tokens, idx, cur_dict):
     return
 
 
-def __col_val(tokens, idx, cur_dict):
+def __col_val(tokens, idx, cur_dict, is_embedded_doc_parse=False):
     # column name, colon, AND value
 
     if __at_invalid_idx(tokens, idx):
@@ -101,18 +101,20 @@ def __col_val(tokens, idx, cur_dict):
         cur_dict.clear()
         return
     if col_tok in LANGUAGE_KEYWORDS or col_tok in OPERATORS:
-        print 'JSON Error: Column name cannot be a keyword or operator: ' + col_tok
-        cur_dict.clear()
-        return
+        if is_embedded_doc_parse and col_tok != '_key':
+            print 'JSON Error: Column name cannot be a keyword or operator: ' + col_tok
+            cur_dict.clear()
+            return
     for ch in col_tok:
         if not ch.isalnum() and ch != '_':
             print 'JSON Error: Column names can only contain A-Z, a-z, 0-9, and _'
             cur_dict.clear()
             return
     if not col_tok[0].isalpha():
-        print 'JSON Error: Column name has to start with a-z or A-Z character'
-        cur_dict.clear()
-        return
+        if is_embedded_doc_parse and col_tok != '_key':
+            print 'JSON Error: Column name has to start with a-z or A-Z character'
+            cur_dict.clear()
+            return
 
 
     # Colon
@@ -127,6 +129,25 @@ def __col_val(tokens, idx, cur_dict):
     if val_tok[0] == '"' and val_tok[-1] == '"': # string
         cur_dict[col_tok] = val_tok[1:-1] # Stripping the quotes
         # TODO: probably should put some cap on string size?
+
+    elif val_tok == '{': # Embedded Document
+        #  __parse(tokens, idx, cur_dict)
+        # val_tok == tokens[idx + 2]
+
+        emb_dic = {}
+        emb_toks = []
+
+        while tokens[idx + 2] != '}':
+            emb_toks.append(tokens[idx + 2])
+            idx += 1
+        emb_toks.append(tokens[idx + 2])
+
+        __parse(emb_toks, 0, emb_dic, True)
+
+        cur_dict[col_tok] = emb_dic.copy() # todo: is copy neccesary?
+
+
+
 
     elif val_tok[0] == '<' and val_tok[-1] == '>': # document reference col
         def __d_lex(s):
@@ -183,7 +204,7 @@ def __col_val(tokens, idx, cur_dict):
     sep_tok = tokens[idx + 3]
 
     if sep_tok == ',':
-        __col_val(tokens, idx + 4, cur_dict)
+        __col_val(tokens, idx + 4, cur_dict, is_embedded_doc_parse)
     elif sep_tok == '}':
         return 
     else:
@@ -208,6 +229,8 @@ def __lex(json_string):
     double_quote_open = False
     angle_brack_open = False
 
+    curly_brace_open = 0
+
     cur_tok = ''
     for i in range(len(json_string)):
         c = json_string[i]
@@ -231,6 +254,10 @@ def __lex(json_string):
                 tokens.append(cur_tok)
             cur_tok = ''
             tokens.append(c)
+            if c == '{':
+                curly_brace_open += 1
+            elif c == '}':
+                curly_brace_open -= 1
 
         elif c == '"':
             cur_tok += c
@@ -247,6 +274,11 @@ def __lex(json_string):
 
         else:
             cur_tok += c
+
+    if curly_brace_open != 0:
+        print 'something went wrong!'
+        print '  oh noooo!'
+        exit()
 
     return tokens
 
@@ -269,6 +301,8 @@ if __name__ == '__main__':
     j_wrong4 = '{col1 : 1, col__2 : "helloooo", col3    True,collloooo        :    ":::::,,,,,"}' #missing :
 
     j_emb1 = '{name: "dick", child : <c_emb, child1>, pay : 90000}'
+
+    j_emb2 = '{name: "joe", child : {_key : "sid1", name : "Jonny", age : 3}, pay : 90000} '
 
     # print __lex(j1)
     # print ''
@@ -297,18 +331,10 @@ if __name__ == '__main__':
     # plist(__lex(j_wrong3))
     # plist(__lex(j_wrong4))
 
-    # plist(__lex(j_emb1))
 
+    emb_dd = json_to_dict(j_emb2)
 
-
-    pdick(json_to_dict(j_emb1))
-    print json_to_dict(j_emb1)
-    print len(json_to_dict(j_emb1))
-
-
-
-
-
-
+    print emb_dd
+    pdick(emb_dd)
 
 
