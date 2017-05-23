@@ -974,13 +974,15 @@ class Parser:
     ######################################################################
     def __create_embedded_doc(self, columns):
 
-        file_to_insert = DocumentData(0,0, columns[_key])
+        file_to_insert = DocumentData(0,0, columns['_key'])
         memory_needed = 0
         for key, value in columns.iteritems():
             insert_key = str(key)
+            if insert_key == '_key':
+                continue
             col_size = len(str(key))
             memory_needed += col_size + 4
-            if isinstance(value, (str,str)):
+            if isinstance(value, tuple):
                 value_size = len(value)
                 file_to_insert.add_value(insert_key, col_size, 4, value_size, value)
                 memory_needed += 1 + value_size + 4
@@ -1021,7 +1023,7 @@ class Parser:
         file_to_insert = DocumentData(0,0)
         memory_needed = 0
         for value in columns:
-            if isinstance(value, (str,str)):
+            if isinstance(value, tuple):
                 value_size = len(value)
                 file_to_insert.add_value(4, value_size, value)
                 memory_needed += 1 + value_size + 4
@@ -1107,21 +1109,38 @@ class Parser:
         # print file_to_insert.allocated_size
         sl.write_data_to_memory(sl.search_memory_for_free(file_to_insert), file_to_insert)
 
-    def __printer(self, dicc, item):
+    def __printer(self, dicc, item, num_embed):
         if isinstance(dicc[item], tuple):
-            print item, " : Reference Document"
-            print "\t Collection : ", dicc[item][0]
-            print "\t Document : ", dicc[item][1]
+            print "\t"*num_embed, item, " : Reference Document"
+            print "\t"*num_embed, "\t Collection : ", dicc[item][0]
+            print "\t"*num_embed, "\t Document : ", dicc[item][1]
         elif isinstance(dicc[item], dict):
-            self.__print_select(dicc[item])
+            print "\t"*num_embed, item, ": Embedded Document :"
+            self.__print_embed(num_embed, dicc[item])
         elif isinstance(dicc[item], list):
             for i in list:
                 if isinstance(i, dict):
-                    self.__print_select(dicc[item])
+                    self.__print_embed(num_embed, dicc[i])
                 else:
-                    print i
+                    print "\t"*num_embed, i
         else:
-            print item, " : ", dicc[item]
+            print "\t"*num_embed,item, " : ", dicc[item]
+
+
+
+
+    def __print_embed(self, num_embed, dicc):    
+        for key in dicc:
+            if key == '_key':
+                print "\t"*(num_embed+1),"Document Key:" , dicc['_key']
+            else:
+               self.__printer(dicc, key, num_embed+1)
+        print '\n \n'
+
+
+
+
+
 
     def __print_select(self, gettt):
         if gettt == False:
@@ -1132,12 +1151,12 @@ class Parser:
                 print "\n \n Documents Selected: \n"
                 for dicc in gettt:
                     print "---------------------------------------------------------------"
-                    print "Document Key:" , dicc['_key']
+                    print " Document Key:" , dicc['_key']
                     for key in dicc:
                         if key == '_key':
                             continue
                         else:
-                           self.__printer(dicc, key)
+                           self.__printer(dicc, key, 0)
                     print '\n \n'
             else:
                 print "\n \n Documents Selected: \n"
@@ -1150,7 +1169,7 @@ class Parser:
                                 self.__printer(dicc, item)
                             except KeyError:
                                 try:
-                                    print predicate_evaluator.eval_pred(item, dicc)
+                                    print predicate_evaluator.eval_pred(item, dicc, 0)
                                 except NameError:
                                     print "Projection", item, "is not possible"
 

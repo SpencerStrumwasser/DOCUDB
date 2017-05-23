@@ -255,8 +255,7 @@ class StorageLayer:
                 f.seek(start)
                 if values[key].val_type == 0:
                     a,b,c,d = self.convert_int(values[key].val)
-                    print values[key].val
-                    print a,b,c,d
+
 
                     f.write(str(chr(d)))
                     f.write(str(chr(c)))
@@ -265,10 +264,10 @@ class StorageLayer:
                     start += values[key].val_size
 
                 elif values[key].val_type == 5:
-                    write_data_to_memory(start, values[key].val)
+                    self.write_data_to_memory(start, values[key].val)
                     start += values[key].val_size  
                 elif values[key].val_type == 5:
-                    write_list_to_memory(start, values[key].val)
+                    self.write_list_to_memory(start, values[key].val)
                     start += values[key].val_size    
                 else:
                     f.write(bytes(values[key].val))
@@ -586,9 +585,9 @@ class StorageLayer:
             if(val_type == 0):
                 value = self.byte_to_int(binary[i:i+val_size])
             elif val_type == 5:
-                value = binary_to_doc_data(binary[i:i+val_size]).user_values_dict
+                value = self.binary_to_doc_data(binary[i:i+val_size]).user_values_dict
             elif val_type == 6:
-                value = binaryList_to_doc_data(binary[i:i+val_size]).user_values_dict
+                value = self.binaryList_to_doc_data(binary[i:i+val_size]).user_values_dict
             elif val_type == 4:
                 value = eval(binary[i:i+val_size].rstrip('\0'))
             else:
@@ -638,9 +637,9 @@ class StorageLayer:
                 value = self.byte_to_int(binary[i:i+val_size])
  
             elif val_type == 5:
-                value = binary_to_doc_data(binary[i:i+val_size]).user_values_dict
+                value = self.binary_to_doc_data(binary[i:i+val_size]).user_values_dict
             elif val_type == 6:
-                value = binaryList_to_doc_data(binary[i:i+val_size]).user_values
+                value = self.binaryList_to_doc_data(binary[i:i+val_size]).user_values
             elif val_type == 4:
                 value = eval(binary[i:i+val_size].rstrip('\0'))
             else:
