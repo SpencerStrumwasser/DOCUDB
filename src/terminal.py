@@ -8,7 +8,7 @@ ROOT_DATA_DIRECTORY = '../data' # Where the tables at
 print 'Hello. Welcome to the DocuDB Terminal...'
 
 p = myparser.Parser()
-
+os.system('')
 while(True):
 
 
