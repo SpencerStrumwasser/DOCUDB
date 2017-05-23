@@ -42,8 +42,8 @@ class Lexer:
             self.tokens[:] = []
 
         double_quote_open = False
-        curly_brace_open = False
-        square_brace_open = False
+        curly_brace_open = 0 # there can be nested parens 
+        square_brace_open = 0 # there can be nested parens
         paren_open = 0 # counts number of (, since there can be nested parens
 
 
@@ -62,19 +62,26 @@ class Lexer:
                     cur_tok = ''
                     double_quote_open = False
 
-            elif curly_brace_open: # {}
+            elif curly_brace_open > 0: # {}
                 cur_tok += c
                 if c == '}':
-                    self.tokens.append(cur_tok)
-                    cur_tok = ''
-                    curly_brace_open = False
+                    curly_brace_open -= 1
+                    if curly_brace_open == 0:
+                        self.tokens.append(cur_tok)
+                        cur_tok = ''
+                elif c == '{':
+                    curly_brace_open += 1
 
-            elif square_brace_open: # []
+
+            elif square_brace_open > 0: # []
                 cur_tok += c
                 if c == ']':
-                    self.tokens.append(cur_tok)
-                    cur_tok = ''
-                    square_brace_open = False
+                    square_brace_open -= 1
+                    if square_brace_open == 0:
+                        self.tokens.append(cur_tok)
+                        cur_tok = ''
+                elif c == '[':
+                    square_brace_open += 1
 
             elif paren_open > 0: # ()
                 cur_tok += c
@@ -121,11 +128,11 @@ class Lexer:
 
             elif c == '{':
                 cur_tok += c
-                curly_brace_open = True
+                curly_brace_open += 1
 
             elif c == '[':
                 cur_tok += c
-                square_brace_open = True
+                square_brace_open += 1
 
             elif c == '(':
                 cur_tok += c
@@ -143,11 +150,11 @@ class Lexer:
             print 'Syntax Error: unclosed double quote'
             return None
 
-        if curly_brace_open == True:
+        if curly_brace_open != 0:
             print 'Syntax Error: unclosed curly brace'
             return None        
 
-        if square_brace_open == True:
+        if square_brace_open != 0:
             print 'Syntax Error: unclosed square bracket'
             return None  
 
@@ -1370,19 +1377,28 @@ if __name__ == "__main__":
 
     # print lexy.lex(test_ins1)
 
-    plist(lexy.lex(test_ins))
-    print ''
-    plist(lexy.lex(test_ins1))
-    print ''
-    plist(lexy.lex(test_ins2))
-    print ''
-    plist(lexy.lex(test_sel))
-    print ''
-    plist(lexy.lex(test_update))
-    print ''
-    plist(lexy.lex(test_delete))
-    print ''
+    # plist(lexy.lex(test_ins))
+    # print ''
+    # plist(lexy.lex(test_ins1))
+    # print ''
+    # plist(lexy.lex(test_ins2))
+    # print ''
+    # plist(lexy.lex(test_sel))
+    # print ''
+    # plist(lexy.lex(test_update))
+    # print ''
+    # plist(lexy.lex(test_delete))
+    # print ''
 
-    plist(lexy.lex(test_sel2))
+    # plist(lexy.lex(test_sel2))
 
+    test_emb1 = 'insert into c_emb "id1" {name: "joe", child : {_key : "sid1", name : "Jonny", age : 3}, pay : 90000} '
+    test_emb2 = 'insert into c_emb "id2" {name: "dick", child : <c_emb, child1>, pay : 90000} '
+    test_emb3 = 'insert into c_emb "id3" {name: "joe", children: : [{_key : "sid1", name : "Jonny", age : 3}, {_key : "sid2", name : "Jon", age : 6}], pay : 90000} '
+
+    plist(lexy.lex(test_emb1))
+    print ''
+    plist(lexy.lex(test_emb2))
+    print ''
+    plist(lexy.lex(test_emb3))
 
