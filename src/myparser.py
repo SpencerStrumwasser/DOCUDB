@@ -989,7 +989,10 @@ class Parser:
                 file_to_insert.add_value(insert_key, col_size, 1, value_size, str(value))
                 memory_needed += 1 + value_size + 4
             elif isinstance(value, dict):
-                value_size = len(str(value))
+                embed_doc = self.__create_embedded_doc(value)
+                value_size = embed_doc.allocated_size
+                file_to_insert.add_value(insert_key, col_size, 5, value_size, embed_doc)
+                memory_needed += 1 + value_size + 4
         for ite in range(10, 25):
             if (memory_needed < 2**ite):
                 break
