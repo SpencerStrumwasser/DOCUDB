@@ -71,7 +71,7 @@ class StorageLayer:
     DEC_SIZE = 8
     CHAR_SIZE = 1
     BOOLEAN_SIZE = 1
-    VAL_TYPE_MAP = {0 : 'int' , 1 : 'dec', 2 : 'char', 3 : 'bool'}
+    VAL_TYPE_MAP = {0 : 'int' , 1 : 'dec', 2 : 'char', 3 : 'bool', 4: 'RefDoc', 5: 'EmbedDoc'}
 
     # TODO: defined in terminal also.
     ROOT_DATA_DIRECTORY = '../data' # Where the tables at
@@ -258,7 +258,10 @@ class StorageLayer:
                     f.write(str(chr(b)))
                     f.write(str(chr(a)))
                     start += values[key].val_size
-                        
+
+                elif values[key].val_type == 5:
+                    write_data_to_memory(start, values[key].val)
+                    start += values[key].val_size    
                 else:
                     f.write(bytes(values[key].val))
                     start += values[key].val_size
@@ -488,7 +491,9 @@ class StorageLayer:
             else:
                 value = binary[i:i+val_size].rstrip('\0')
                 i += val_size
-
+            if val_type == 5:
+                value = binary_to_doc_data(binary[i:i+val_size]).user_values_dict
+            
             ret.add_value(col_name, col_name_len, val_type, val_size, value)
 
 

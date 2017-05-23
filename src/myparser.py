@@ -969,19 +969,19 @@ class Parser:
     ######################################################################
     ######################################################################
     ######################################################################
+    def __create_embedded_doc(self, columns):
 
-    def __insert_storage_layer(self, filename):
-
-        sl = StorageLayer(filename)
-        print self.command.insert_key_name
-        file_to_insert = DocumentData(0,0, self.command.insert_key_name)
+        file_to_insert = DocumentData(0,0, columns[_key])
         memory_needed = 0
-        columns = self.command.json_doc
         for key, value in columns.iteritems():
             insert_key = str(key)
             col_size = len(str(key))
             memory_needed += col_size + 4
-            if isinstance(value, str):
+            if isinstance(value, (str,str)):
+                value_size = len(value)
+                file_to_insert.add_value(insert_key, col_size, 4, value_size, value)
+                memory_needed += 1 + value_size + 4
+            elif isinstance(value, str):
                 value_size = len(value)
                 file_to_insert.add_value(insert_key, col_size, 2, value_size, value)
                 memory_needed += 1 + value_size + 4
@@ -995,6 +995,59 @@ class Parser:
                 value_size = len(str(value))
                 file_to_insert.add_value(insert_key, col_size, 1, value_size, str(value))
                 memory_needed += 1 + value_size + 4
+            elif isinstance(value, dict):
+                embed_doc = self.__create_embedded_doc(value)
+                value_size = embed_doc.allocated_size
+                file_to_insert.add_value(insert_key, col_size, 5, value_size, embed_doc)
+                memory_needed += 1 + value_size + 4
+        for ite in range(10, 25):
+            if (memory_needed < 2**ite):
+                break
+        file_to_insert.allocated_size = 2**ite-1
+        # print file_to_insert.allocated_size
+        return file_to_insert
+
+
+
+
+
+
+
+
+    def __insert_storage_layer(self, filename):
+
+        sl = StorageLayer(filename)
+        print self.command.insert_key_name
+        file_to_insert = DocumentData(0,0, self.command.insert_key_name)
+        memory_needed = 0
+        columns = self.command.json_doc
+        for key, value in columns.iteritems():
+            insert_key = str(key)
+            col_size = len(str(key))
+            memory_needed += col_size + 4
+            if isinstance(value, (str,str)):
+                value_size = len(value)
+                file_to_insert.add_value(insert_key, col_size, 4, value_size, value)
+                memory_needed += 1 + value_size + 4
+            elif isinstance(value, str):
+                value_size = len(value)
+                file_to_insert.add_value(insert_key, col_size, 2, value_size, value)
+                memory_needed += 1 + value_size + 4
+            elif isinstance(value, bool):
+                file_to_insert.add_value(insert_key, col_size, 3, 1, value)
+                memory_needed += 1 + 4 + 1
+            elif isinstance(value, int):
+                file_to_insert.add_value(insert_key, col_size, 0, 4, value)
+                memory_needed += 1 + 4 + 4
+            elif isinstance(value, float):
+                value_size = len(str(value))
+                file_to_insert.add_value(insert_key, col_size, 1, value_size, str(value))
+                memory_needed += 1 + value_size + 4
+            elif isinstance(value, dict):
+                embed_doc = self.__create_embedded_doc(value)
+                value_size = embed_doc.allocated_size
+                file_to_insert.add_value(insert_key, col_size, 5, value_size, embed_doc)
+                memory_needed += 1 + value_size + 4
         for ite in range(10, 25):
             if (memory_needed < 2**ite):
                 break
@@ -1004,90 +1057,9 @@ class Parser:
 
 
 
-
-    def __select_storage_layer(self, filename):
-
-        sl = StorageLayer(filename)
-        if self.command.predicate == None:
-            print 'Finding All Documents'
-            gettt = sl.get_all_tuples(self.command.predicate)
-            if gettt == False:
-                print "No Documents Exists"
-            else:
-                proj = self.command.projection
-                if proj == []:
-                    print "\n \n Documents Selected: \n"
-                    for dicc in gettt:
-                        print "---------------------------------------------------------------"
-                        print "Document Key:" , dicc['_key']
-                        for key in dicc:
-                            if key == '_key':
-                                continue
-                            else: 
-                                print key, " : ", dicc[key]
-                        print '\n \n'
-                else:
-                    print "\n \n Documents Selected: \n"
-                    for dicc in gettt:
-                        print "---------------------------------------------------------------"
-                        print "Document Key:" , dicc['_key']
-                        for item in proj:
-                            if item != "_key":
-                                try:
-                                    print item, " : ", dicc[item]
-                                except KeyError:
-                                    try:
-                                        print predicate_evaluator.eval_pred(item, dicc)
-                                    except NameError:
-                                        print "Projection", item, "is not possible"
-
-                        print '\n \n'
-
-            return
-        # elif self.command.predicate[:9] == "(_key == ":
-        #     if self.command.predicate.count('"', 0, len(self.command.predicate)) == 2:
-        #         for i in range(10, len(self.command.predicate)):
-        #             if self.command.predicate[i:i+1] == '"' :
-        #                 key_val = self.command.predicate[10:i]
-        #                 print "Finding Document for Key: " + key_val
-        #                 gettt = sl.get_tuples_by_key([key_val.lower()])
-        #                 if gettt == False:
-        #                     print "No Document Exists For This Key"
-        #                 else:
-        #                     proj = self.command.projection
-        #                     if proj == []:
-        #                         print "\n \n Documents Selected: \n"
-        #                         for dicc in gettt:
-        #                             print "---------------------------------------------------------------"
-        #                             print "Document Key:" , dicc['_key']
-        #                             for key in dicc:
-        #                                 if key == '_key':
-        #                                     continue
-        #                                 else: 
-        #                                     print key, " : ", dicc[key]
-        #                             print '\n \n'
-        #                     else:
-        #                         print "\n \n Documents Selected: \n"
-        #                         for dicc in gettt:
-        #                             print "---------------------------------------------------------------"
-        #                             print "Document Key:" , dicc['_key']
-        #                             for item in proj:
-        #                                 if item != "_key":
-        #                                     try:
-        #                                         print item, " : ", dicc[item]
-        #                                     except KeyError:
-        #                                         try:
-        #                                             print predicate_evaluator.eval_pred(item, dicc)
-        #                                         except NameError:
-        #                                             print "Projection", item, "is not possible"
-
-        #                             print '\n \n'
-        #                 return
-    
-        print "Finding Document for predicate: " + self.command.predicate
-        gettt = sl.get_all_tuples(self.command.predicate)
+    def __print_select(self, gettt):
         if gettt == False:
-            print "No Document Exists For This Predicate"
+            print "No Documents Exists"
         else:
             proj = self.command.projection
             if proj == []:
@@ -1117,6 +1089,30 @@ class Parser:
                                     print "Projection", item, "is not possible"
 
                     print '\n \n'
+
+
+    def __select_storage_layer(self, filename):
+
+        sl = StorageLayer(filename)
+        if self.command.predicate == None:
+            print 'Finding All Documents'
+            gettt = sl.get_all_tuples(self.command.predicate)
+            self.__print_select(gettt)
+
+
+            return
+        # elif self.command.predicate[:9] == "(_key == ":
+        #     if self.command.predicate.count('"', 0, len(self.command.predicate)) == 2:
+        #         for i in range(10, len(self.command.predicate)):
+        #             if self.command.predicate[i:i+1] == '"' :
+        #                 key_val = self.command.predicate[10:i]
+        #                 print "Finding Document for Key: " + key_val
+        #                 gettt = sl.get_tuples_by_key([key_val.lower()])
+        #                 self.__print_select(gettt)
+    
+        print "Finding Document for predicate: " + self.command.predicate
+        gettt = sl.get_all_tuples(self.command.predicate)
+        self.__print_select(gettt)
 
 
     def __update_storage_layer(self, filename):
