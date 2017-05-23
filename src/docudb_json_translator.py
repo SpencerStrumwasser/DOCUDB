@@ -189,8 +189,8 @@ def __col_val(tokens, idx, cur_dict, is_embedded_doc_parse=False):
 
 
         def __value_list(lst_toks, lst_idx, val_lst):
-            print 'lst_toks ' + str(lst_toks)
-            print lst_idx
+            # print 'lst_toks ' + str(lst_toks)
+            # print lst_idx
 
             val_tok = lst_toks[lst_idx]
 
@@ -229,11 +229,11 @@ def __col_val(tokens, idx, cur_dict, is_embedded_doc_parse=False):
 
                 # emb_toks.append(lst_toks[lst_idx])
 
-                print emb_toks
+                # print emb_toks
 
                 __parse(emb_toks, 0, emb_dic, True)
 
-                print emb_dic
+                # print emb_dic
 
                 val_lst.append(emb_dic.copy()) # todo: is copy neccesary?
 
@@ -293,7 +293,7 @@ def __col_val(tokens, idx, cur_dict, is_embedded_doc_parse=False):
                 return
             sep_tok = lst_toks[lst_idx + 1]
 
-            print sep_tok
+            # print sep_tok
 
             if sep_tok == ',':
                 __value_list(lst_toks, lst_idx + 2, val_lst)

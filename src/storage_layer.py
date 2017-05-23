@@ -1,6 +1,7 @@
 import os
 import document
 import predicate_evaluator
+import listdata
 
 
 # TODO: maybe make a static class. seems unecesary and waste of space to make new instanece for each new filename
@@ -319,8 +320,10 @@ class StorageLayer:
             filled_loc = start
             start += self.INT_SIZE
 
-            values = document.values
+            values = lis.values
+            print "FUCK YOU MOTHER"
             for val in values:
+                print val
                 # write value type
                 f.seek(start)
                 a = self.convert_single_byte(val.val_type)
@@ -344,13 +347,13 @@ class StorageLayer:
                     f.write(str(chr(c)))
                     f.write(str(chr(b)))
                     f.write(str(chr(a)))
-                    start += values[key].val_size
+                    start += val.val_size
 
                 elif val.val_type == 5:
-                    write_data_to_memory(start, val.val)
+                    self.write_data_to_memory(start, val.val)
                     start += val.val_size 
                 elif val.val_type == 6:
-                    write_list_to_memory(start, val.val)
+                    self.write_list_to_memory(start, val.val)
                     start += val.val_size    
                 else:
                     f.write(bytes(val.val))
@@ -581,13 +584,13 @@ class StorageLayer:
             i += 1
             val_size = self.byte_to_int(binary[i:i+4])
             i += 4
-
             if(val_type == 0):
                 value = self.byte_to_int(binary[i:i+val_size])
             elif val_type == 5:
                 value = self.binary_to_doc_data(binary[i:i+val_size]).user_values_dict
             elif val_type == 6:
-                value = self.binaryList_to_doc_data(binary[i:i+val_size]).user_values_dict
+                value = self.binaryList_to_doc_data(binary[i:i+val_size]).user_values
+                print "meow", value
             elif val_type == 4:
                 value = eval(binary[i:i+val_size].rstrip('\0'))
             else:
@@ -612,7 +615,6 @@ class StorageLayer:
 
         # TODO: .rstrip('\0') will not be neccesary once data is stored in 
         # binary format
-
         is_filled = bool(binary[0])
         allocated_temp = binary[1:5]
         allocated = self.byte_to_int(allocated_temp)
@@ -623,19 +625,15 @@ class StorageLayer:
         ret = listdata.ListData(allocated, filled)
 
         # 1B - value type | 4B - value size| ?B - value|
-        i = 39
+        i = 9
         while(i < len(binary)):
-            if binary[i] == '\0':
-                break
             val_type = int(bin(ord(binary[i])),2)
             i += 1
             val_size = self.byte_to_int(binary[i:i+4])
             i += 4
-
+            print val_type, val_size
             if(val_type == 0):
-
                 value = self.byte_to_int(binary[i:i+val_size])
- 
             elif val_type == 5:
                 value = self.binary_to_doc_data(binary[i:i+val_size]).user_values_dict
             elif val_type == 6:
@@ -645,8 +643,8 @@ class StorageLayer:
             else:
                 value = binary[i:i+val_size].rstrip('\0')
             i += val_size
- 
-            ret.add_value(col_name, col_name_len, val_type, val_size, value)
+            
+            ret.add_value(val_type, val_size, value)
 
         return ret
 

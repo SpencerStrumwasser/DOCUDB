@@ -1000,8 +1000,8 @@ class Parser:
             col_size = len(str(key))
             memory_needed += col_size + 4
             if isinstance(value, tuple):
-                value_size = len(value)
-                file_to_insert.add_value(insert_key, col_size, 4, value_size, value)
+                value_size = len(str(value))
+                file_to_insert.add_value(insert_key, col_size, 4, value_size, str(value))
                 memory_needed += 1 + value_size + 4
             elif isinstance(value, str):
                 value_size = len(value)
@@ -1037,12 +1037,12 @@ class Parser:
 
     def __create_list(self, columns):
 
-        file_to_insert = DocumentData(0,0)
-        memory_needed = 0
+        file_to_insert = ListData(0,0)
+        memory_needed = 9
         for value in columns:
             if isinstance(value, tuple):
-                value_size = len(value)
-                file_to_insert.add_value(4, value_size, value)
+                value_size = len(str(value))
+                file_to_insert.add_value(4, value_size, str(value))
                 memory_needed += 1 + value_size + 4
             elif isinstance(value, str):
                 value_size = len(value)
@@ -1070,6 +1070,7 @@ class Parser:
                 memory_needed += 1 + value_size + 4
         file_to_insert.allocated_size = memory_needed
         # print file_to_insert.allocated_size
+        print "fuck this shit MOTHERF", file_to_insert.user_values
         return file_to_insert
 
 
@@ -1137,11 +1138,18 @@ class Parser:
                 self.color.PURPLE + "Embedded Document :" + self.color.END
             self.__print_embed(num_embed, dicc[item])
         elif isinstance(dicc[item], list):
-            for i in list:
+            print "\t"*num_embed, self.color.GREEN + item + self.color.END, ": ",\
+                self.color.GREEN + "List" + self.color.END
+            for i in dicc[item]:
                 if isinstance(i, dict):
-                    self.__print_embed(num_embed, dicc[i])
+                    print "\t"*(num_embed+1),self.color.PURPLE + "Embedded Document :" + self.color.END
+                    self.__print_embed(num_embed+1, i)
+                elif isinstance(i, tuple):
+                    print "\t"*(num_embed+1), self.color.CYAN + "Reference Document :" + self.color.END
+                    print "\t"*(num_embed+1), self.color.DARKPURPLE,"\t Collection : ", dicc[item][0], self.color.END
+                    print "\t"*(num_embed+1), self.color.DARKPURPLE,"\t Document : ", dicc[item][1], self.color.END
                 else:
-                    print "\t"*num_embed, i
+                    print "\t"*(num_embed+1), self.color.BLUE , i, self.color.END
         else:
             print "\t"*num_embed, self.color.RED + item + self.color.END, " : ", \
                 self.color.BLUE , dicc[item] , self.color.END
