@@ -266,7 +266,7 @@ class StorageLayer:
                 elif values[key].val_type == 5:
                     self.write_data_to_memory(start, values[key].val)
                     start += values[key].val_size  
-                elif values[key].val_type == 5:
+                elif values[key].val_type == 6:
                     self.write_list_to_memory(start, values[key].val)
                     start += values[key].val_size    
                 else:

@@ -1135,7 +1135,7 @@ class Parser:
                 print "\t"*(num_embed+1),"Document Key:" , dicc['_key']
             else:
                self.__printer(dicc, key, num_embed+1)
-        print '\n \n'
+
 
 
 
