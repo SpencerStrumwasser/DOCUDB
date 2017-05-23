@@ -972,6 +972,23 @@ class Parser:
     ######################################################################
     ######################################################################
     ######################################################################
+    class color:
+        PURPLE = '\033[95m'
+        CYAN = '\033[96m'
+        DARKCYAN = '\033[36m'
+        DARKPURPLE = '\033[35m'
+        BLUE = '\033[94m'
+        GREEN = '\033[92m'
+        YELLOW = '\033[93m'
+        RED = '\033[91m'
+        BOLD = '\033[1m'
+        UNDERLINE = '\033[4m'
+        END = '\033[0m'
+
+
+
+
+
     def __create_embedded_doc(self, columns):
 
         file_to_insert = DocumentData(0,0, columns['_key'])
@@ -1111,11 +1128,13 @@ class Parser:
 
     def __printer(self, dicc, item, num_embed):
         if isinstance(dicc[item], tuple):
-            print "\t"*num_embed, item, " : Reference Document"
-            print "\t"*num_embed, "\t Collection : ", dicc[item][0]
-            print "\t"*num_embed, "\t Document : ", dicc[item][1]
+            print "\t"*num_embed, self.color.CYAN + item + self.color.END,": ", \
+                self.color.CYAN + "Reference Document" + self.color.END
+            print "\t"*num_embed, self.color.DARKPURPLE,"\t Collection : ", dicc[item][0], self.color.END
+            print "\t"*num_embed, self.color.DARKPURPLE,"\t Document : ", dicc[item][1], self.color.END
         elif isinstance(dicc[item], dict):
-            print "\t"*num_embed, item, ": Embedded Document :"
+            print "\t"*num_embed, self.color.PURPLE + item + self.color.END, ": ",\
+                self.color.PURPLE + "Embedded Document :" + self.color.END
             self.__print_embed(num_embed, dicc[item])
         elif isinstance(dicc[item], list):
             for i in list:
@@ -1124,7 +1143,8 @@ class Parser:
                 else:
                     print "\t"*num_embed, i
         else:
-            print "\t"*num_embed,item, " : ", dicc[item]
+            print "\t"*num_embed, self.color.RED + item + self.color.END, " : ", \
+                self.color.BLUE , dicc[item] , self.color.END
 
 
 
@@ -1132,7 +1152,8 @@ class Parser:
     def __print_embed(self, num_embed, dicc):    
         for key in dicc:
             if key == '_key':
-                print "\t"*(num_embed+1),"Document Key:" , dicc['_key']
+                print "\t"*(num_embed+1), self.color.DARKCYAN + "Document Key:",  \
+               dicc['_key'] + self.color.END
             else:
                self.__printer(dicc, key, num_embed+1)
 
@@ -1151,7 +1172,8 @@ class Parser:
                 print "\n \n Documents Selected: \n"
                 for dicc in gettt:
                     print "---------------------------------------------------------------"
-                    print " Document Key:" , dicc['_key']
+                    print self.color.DARKCYAN + " Document Key:", \
+                        dicc['_key'] + self.color.END
                     for key in dicc:
                         if key == '_key':
                             continue
