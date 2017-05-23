@@ -71,7 +71,7 @@ class StorageLayer:
     DEC_SIZE = 8
     CHAR_SIZE = 1
     BOOLEAN_SIZE = 1
-    VAL_TYPE_MAP = {0 : 'int' , 1 : 'dec', 2 : 'char', 3 : 'bool', 4: 'RefDoc', 5: 'EmbedDoc'}
+    VAL_TYPE_MAP = {0 : 'int' , 1 : 'dec', 2 : 'char', 3 : 'bool', 4: 'RefDoc', 5: 'EmbedDoc', 6 : 'List'}
 
     # TODO: defined in terminal also.
     ROOT_DATA_DIRECTORY = '../data' # Where the tables at
@@ -94,7 +94,10 @@ class StorageLayer:
         
         ret = ''
         for k in range(0,4):
-           ret += bin(ord(byte[k]))[2:]
+            item = bin(ord(byte[k]))[2:]
+            num_mult = 8 - len(item)
+            item = ('0'*num_mult) + item
+            ret += item
         ret = int(ret,2)
         return ret
 
@@ -252,6 +255,8 @@ class StorageLayer:
                 f.seek(start)
                 if values[key].val_type == 0:
                     a,b,c,d = self.convert_int(values[key].val)
+                    print values[key].val
+                    print a,b,c,d
 
                     f.write(str(chr(d)))
                     f.write(str(chr(c)))
@@ -579,13 +584,13 @@ class StorageLayer:
             i += 4
 
             if(val_type == 0):
-
                 value = self.byte_to_int(binary[i:i+val_size])
             elif val_type == 5:
                 value = binary_to_doc_data(binary[i:i+val_size]).user_values_dict
             elif val_type == 6:
                 value = binaryList_to_doc_data(binary[i:i+val_size]).user_values_dict
-            
+            elif val_type == 4:
+                value = eval(binary[i:i+val_size].rstrip('\0'))
             else:
                 value = binary[i:i+val_size].rstrip('\0')
             i += val_size
@@ -618,11 +623,7 @@ class StorageLayer:
 
         ret = listdata.ListData(allocated, filled)
 
-# | 1B - col name length | 1~255B - col name | 1B - value type | 4B - value size| ?B - value|
-
-        # print binary
-        # print 'start data'
-
+        # 1B - value type | 4B - value size| ?B - value|
         i = 39
         while(i < len(binary)):
             if binary[i] == '\0':
@@ -640,7 +641,8 @@ class StorageLayer:
                 value = binary_to_doc_data(binary[i:i+val_size]).user_values_dict
             elif val_type == 6:
                 value = binaryList_to_doc_data(binary[i:i+val_size]).user_values
-            
+            elif val_type == 4:
+                value = eval(binary[i:i+val_size].rstrip('\0'))
             else:
                 value = binary[i:i+val_size].rstrip('\0')
             i += val_size

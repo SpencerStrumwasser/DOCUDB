@@ -1010,7 +1010,7 @@ class Parser:
         for ite in range(10, 25):
             if (memory_needed < 2**ite):
                 break
-        file_to_insert.allocated_size = 2**ite-1
+        file_to_insert.allocated_size = 2**ite
         # print file_to_insert.allocated_size
         return file_to_insert
 
@@ -1068,9 +1068,10 @@ class Parser:
             insert_key = str(key)
             col_size = len(str(key))
             memory_needed += col_size + 4
-            if isinstance(value, (str,str)):
-                value_size = len(value)
-                file_to_insert.add_value(insert_key, col_size, 4, value_size, value)
+            
+            if isinstance(value, tuple):
+                value_size = len(str(value))
+                file_to_insert.add_value(insert_key, col_size, 4, value_size, str(value))
                 memory_needed += 1 + value_size + 4
             elif isinstance(value, str):
                 value_size = len(value)
@@ -1100,11 +1101,25 @@ class Parser:
         for ite in range(10, 25):
             if (memory_needed < 2**ite):
                 break
-        file_to_insert.allocated_size = 2**ite-1
+        file_to_insert.allocated_size = 2**ite
         # print file_to_insert.allocated_size
         sl.write_data_to_memory(sl.search_memory_for_free(file_to_insert), file_to_insert)
 
-
+    def __printer(self, dicc, item):
+        if isinstance(dicc[item], tuple):
+            print item, " : Reference Document"
+            print "\t Collection : ", dicc[item][0]
+            print "\t Document : ", dicc[item][1]
+        elif isinstance(dicc[item], dict):
+            self.__print_select(dicc[item])
+        elif isinstance(dicc[item], list):
+            for i in list:
+                if isinstance(i, dict):
+                    self.__print_select(dicc[item])
+                else:
+                    print i
+        else:
+            print item, " : ", dicc[item]
 
     def __print_select(self, gettt):
         if gettt == False:
@@ -1119,17 +1134,8 @@ class Parser:
                     for key in dicc:
                         if key == '_key':
                             continue
-                        else: 
-                            if isinstance(dicc[key], dict):
-                                self.__print_select(dicc[key])
-                            elif isinstance(dicc[key], list):
-                                for i in list:
-                                    if isinstance(i, dict):
-                                        self.__print_select(dicc[key])
-                                    else:
-                                        print i
-                            else:
-                                print key, " : ", dicc[key]
+                        else:
+                           self.__printer(dicc, key)
                     print '\n \n'
             else:
                 print "\n \n Documents Selected: \n"
@@ -1139,16 +1145,7 @@ class Parser:
                     for item in proj:
                         if item != "_key":
                             try:
-                                if isinstance(dicc[item], dict):
-                                    self.__print_select(dicc[item])
-                                elif isinstance(dicc[item], list):
-                                    for i in list:
-                                        if isinstance(i, dict):
-                                            self.__print_select(dicc[item])
-                                        else:
-                                            print i
-                                else:
-                                    print item, " : ", dicc[item]
+                                self.__printer(dicc, item)
                             except KeyError:
                                 try:
                                     print predicate_evaluator.eval_pred(item, dicc)
