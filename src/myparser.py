@@ -1044,12 +1044,12 @@ class Parser:
             elif isinstance(value, dict):
                 embed_doc = self.__create_embedded_doc(value)
                 value_size = embed_doc.allocated_size
-                file_to_insert.add_value(insert_key, col_size, 5, value_size, embed_doc)
+                file_to_insert.add_value(5, value_size, embed_doc)
                 memory_needed += 1 + value_size + 4
             elif isinstance(value, list):
                 embed_lis = self.__create_list(value)
                 value_size = embed_lis.allocated_size
-                file_to_insert.add_value(insert_key, col_size, 6, value_size, embed_lis)
+                file_to_insert.add_value(6, value_size, embed_lis)
                 memory_needed += 1 + value_size + 4
         file_to_insert.allocated_size = memory_needed
         # print file_to_insert.allocated_size
