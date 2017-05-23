@@ -1,6 +1,7 @@
 import document
 from document import DocumentData
 from storage_layer import StorageLayer
+from listdata import ListData
 
 import docudb_json_translator
 import docudb_update_translator
@@ -993,6 +994,12 @@ class Parser:
                 value_size = embed_doc.allocated_size
                 file_to_insert.add_value(insert_key, col_size, 5, value_size, embed_doc)
                 memory_needed += 1 + value_size + 4
+            elif isinstance(value, list):
+                embed_lis = self.__create_list(value)
+                value_size = embed_lis.allocated_size
+                file_to_insert.add_value(insert_key, col_size, 6, value_size, embed_lis)
+                memory_needed += 1 + value_size + 4
+
         for ite in range(10, 25):
             if (memory_needed < 2**ite):
                 break
@@ -1000,6 +1007,42 @@ class Parser:
         # print file_to_insert.allocated_size
         return file_to_insert
 
+    def __create_list(self, columns):
+
+        file_to_insert = DocumentData(0,0)
+        memory_needed = 0
+        for value in columns:
+            if isinstance(value, (str,str)):
+                value_size = len(value)
+                file_to_insert.add_value(4, value_size, value)
+                memory_needed += 1 + value_size + 4
+            elif isinstance(value, str):
+                value_size = len(value)
+                file_to_insert.add_value(2, value_size, value)
+                memory_needed += 1 + value_size + 4
+            elif isinstance(value, bool):
+                file_to_insert.add_value(3, 1, value)
+                memory_needed += 1 + 4 + 1
+            elif isinstance(value, int):
+                file_to_insert.add_value(0, 4, value)
+                memory_needed += 1 + 4 + 4
+            elif isinstance(value, float):
+                value_size = len(str(value))
+                file_to_insert.add_value(1, value_size, str(value))
+                memory_needed += 1 + value_size + 4
+            elif isinstance(value, dict):
+                embed_doc = self.__create_embedded_doc(value)
+                value_size = embed_doc.allocated_size
+                file_to_insert.add_value(insert_key, col_size, 5, value_size, embed_doc)
+                memory_needed += 1 + value_size + 4
+            elif isinstance(value, list):
+                embed_lis = self.__create_list(value)
+                value_size = embed_lis.allocated_size
+                file_to_insert.add_value(insert_key, col_size, 6, value_size, embed_lis)
+                memory_needed += 1 + value_size + 4
+        file_to_insert.allocated_size = memory_needed
+        # print file_to_insert.allocated_size
+        return file_to_insert
 
 
 
@@ -1041,6 +1084,12 @@ class Parser:
                 value_size = embed_doc.allocated_size
                 file_to_insert.add_value(insert_key, col_size, 5, value_size, embed_doc)
                 memory_needed += 1 + value_size + 4
+            elif isinstance(value, list):
+                embed_lis = self.__create_list(value)
+                value_size = embed_lis.allocated_size
+                file_to_insert.add_value(insert_key, col_size, 6, value_size, embed_lis)
+                memory_needed += 1 + value_size + 4
+
         for ite in range(10, 25):
             if (memory_needed < 2**ite):
                 break
@@ -1064,7 +1113,16 @@ class Parser:
                         if key == '_key':
                             continue
                         else: 
-                            print key, " : ", dicc[key]
+                            if isinstance(dicc[key], dict):
+                                self.__print_select(dicc[key])
+                            elif isinstance(dicc[key], list):
+                                for i in list:
+                                    if isinstance(i, dict):
+                                        self.__print_select(dicc[key])
+                                    else:
+                                        print i
+                            else:
+                                print key, " : ", dicc[key]
                     print '\n \n'
             else:
                 print "\n \n Documents Selected: \n"
@@ -1074,7 +1132,16 @@ class Parser:
                     for item in proj:
                         if item != "_key":
                             try:
-                                print item, " : ", dicc[item]
+                                if isinstance(dicc[item], dict):
+                                    self.__print_select(dicc[item])
+                                elif isinstance(dicc[item], list):
+                                    for i in list:
+                                        if isinstance(i, dict):
+                                            self.__print_select(dicc[item])
+                                        else:
+                                            print i
+                                else:
+                                    print item, " : ", dicc[item]
                             except KeyError:
                                 try:
                                     print predicate_evaluator.eval_pred(item, dicc)

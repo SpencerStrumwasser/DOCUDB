@@ -261,6 +261,9 @@ class StorageLayer:
 
                 elif values[key].val_type == 5:
                     write_data_to_memory(start, values[key].val)
+                    start += values[key].val_size  
+                elif values[key].val_type == 5:
+                    write_list_to_memory(start, values[key].val)
                     start += values[key].val_size    
                 else:
                     f.write(bytes(values[key].val))
@@ -277,6 +280,97 @@ class StorageLayer:
             f.write(str(chr(a)))
         # return true to make sure it works
         return True 
+
+
+
+
+    def write_list_to_memory(self, start, lis):
+        '''
+        todo: method summary
+
+        input: start ->
+        input document ->
+        return ->
+        '''
+
+        # todo: record filled_space
+        init_start = start
+        with open(self.filename, 'r+b') as f:
+            f.seek(start)
+            # show it has not been "deleted"
+            f.write(bytearray(lis.allocated_size - 1))
+            f.seek(start)
+            f.write('1')
+            start += self.BOOLEAN_SIZE
+            f.seek(start)
+            # write how much is allocated
+
+            a,b,c,d = self.convert_int(lis.allocated_size)
+
+            f.write(str(chr(d)))
+            f.write(str(chr(c)))
+            f.write(str(chr(b)))
+            f.write(str(chr(a)))
+            start += self.INT_SIZE
+            filled_loc = start
+            start += self.INT_SIZE
+
+            values = document.values
+            for val in values:
+                # write value type
+                f.seek(start)
+                a = self.convert_single_byte(val.val_type)
+                f.write(str(chr(a)))
+                start += 1
+                # write value size
+                f.seek(start)
+                a,b,c,d = self.convert_int(val.val_size)
+
+                f.write(str(chr(d)))
+                f.write(str(chr(c)))
+                f.write(str(chr(b)))
+                f.write(str(chr(a)))
+                start += self.INT_SIZE
+                # write value
+                f.seek(start)
+                if val.val_type == 0:
+                    a,b,c,d = self.convert_int(val.val)
+
+                    f.write(str(chr(d)))
+                    f.write(str(chr(c)))
+                    f.write(str(chr(b)))
+                    f.write(str(chr(a)))
+                    start += values[key].val_size
+
+                elif val.val_type == 5:
+                    write_data_to_memory(start, val.val)
+                    start += val.val_size 
+                elif val.val_type == 6:
+                    write_list_to_memory(start, val.val)
+                    start += val.val_size    
+                else:
+                    f.write(bytes(val.val))
+                    start += val.val_size
+        
+            f.seek(filled_loc)
+            # write how much is being used
+
+            a,b,c,d = self.convert_int(start - init_start)
+
+            f.write(str(chr(d)))
+            f.write(str(chr(c)))
+            f.write(str(chr(b)))
+            f.write(str(chr(a)))
+        # return true to make sure it works
+        return True 
+
+
+
+
+
+
+
+
 
 
 
@@ -487,25 +581,74 @@ class StorageLayer:
             if(val_type == 0):
 
                 value = self.byte_to_int(binary[i:i+val_size])
-                i += val_size
+            elif val_type == 5:
+                value = binary_to_doc_data(binary[i:i+val_size]).user_values_dict
+            elif val_type == 6:
+                value = binaryList_to_doc_data(binary[i:i+val_size]).user_values_dict
+            
             else:
                 value = binary[i:i+val_size].rstrip('\0')
-                i += val_size
-            if val_type == 5:
-                value = binary_to_doc_data(binary[i:i+val_size]).user_values_dict
+            i += val_size
             
             ret.add_value(col_name, col_name_len, val_type, val_size, value)
 
 
-            # print 'col_name_len: ' , col_name_len
-            # print 'col_name: ' , col_name
-            # print 'val_type: ' , val_type
-            # print 'val_size: ' , val_size
-            # print 'value: ' , value
+        return ret
 
 
+
+
+    def binaryList_to_doc_data(self, binary):
+        # TODO: update when we store datatypes 
+        # as NOT alll strings
+
+        # print '--------'
+        # print binary
+        # print '--------'
+
+        # TODO: .rstrip('\0') will not be neccesary once data is stored in 
+        # binary format
+
+        is_filled = bool(binary[0])
+        allocated_temp = binary[1:5]
+        allocated = self.byte_to_int(allocated_temp)
+        filled_temp = binary[5:9]
+        filled = self.byte_to_int(filled_temp)
+
+
+        ret = listdata.ListData(allocated, filled)
+
+# | 1B - col name length | 1~255B - col name | 1B - value type | 4B - value size| ?B - value|
+
+        # print binary
+        # print 'start data'
+
+        i = 39
+        while(i < len(binary)):
+            if binary[i] == '\0':
+                break
+            val_type = int(bin(ord(binary[i])),2)
+            i += 1
+            val_size = self.byte_to_int(binary[i:i+4])
+            i += 4
+
+            if(val_type == 0):
+
+                value = self.byte_to_int(binary[i:i+val_size])
+ 
+            elif val_type == 5:
+                value = binary_to_doc_data(binary[i:i+val_size]).user_values_dict
+            elif val_type == 6:
+                value = binaryList_to_doc_data(binary[i:i+val_size]).user_values
+            
+            else:
+                value = binary[i:i+val_size].rstrip('\0')
+            i += val_size
+ 
+            ret.add_value(col_name, col_name_len, val_type, val_size, value)
 
         return ret
+
 
 
     def update_by_keys(self, keys, columns, news, insert_flag):
