@@ -128,6 +128,25 @@ def __col_val(tokens, idx, cur_dict):
         cur_dict[col_tok] = val_tok[1:-1] # Stripping the quotes
         # TODO: probably should put some cap on string size?
 
+    elif val_tok[0] == '<' and val_tok[-1] == '>': # document reference col
+        def __d_lex(s):
+            
+            ct = ''
+            r = []
+            for i in range(len(s)):
+                c = s[i]
+
+                if c == ',' or c == '>':
+                    r.append(ct)
+                    ct = ''
+                else:
+                    ct += c
+            return r[:]
+
+
+        cur_dict[col_tok] = tuple(__d_lex(val_tok[1:]))    
+
+
     elif val_tok == 'true':
         cur_dict[col_tok] = True
     
@@ -187,6 +206,7 @@ def __lex(json_string):
     tokens = []
 
     double_quote_open = False
+    angle_brack_open = False
 
     cur_tok = ''
     for i in range(len(json_string)):
@@ -199,6 +219,13 @@ def __lex(json_string):
                 cur_tok = ''
                 double_quote_open = False
 
+        elif angle_brack_open:
+            cur_tok += c
+            if c == '>':
+                tokens.append(cur_tok)
+                cur_tok = ''
+                angle_brack_open = False
+
         elif c == ':' or c == ',' or c == '{' or c == '}':
             if cur_tok != '':
                 tokens.append(cur_tok)
@@ -208,6 +235,10 @@ def __lex(json_string):
         elif c == '"':
             cur_tok += c
             double_quote_open = True
+
+        elif c == '<':
+            cur_tok += c
+            angle_brack_open = True
 
         elif c == ' ' or c == '\n' or c == '\t' or c == '\r':
             if cur_tok != '':
@@ -237,6 +268,8 @@ if __name__ == '__main__':
     j_wrong3 = '{col1 : 1, col__2 : "helloooo"col3:True,collloooo        :    ":::::,,,,,"}' # missing ,
     j_wrong4 = '{col1 : 1, col__2 : "helloooo", col3    True,collloooo        :    ":::::,,,,,"}' #missing :
 
+    j_emb1 = '{name: "dick", child : <c_emb, child1>, pay : 90000}'
+
     # print __lex(j1)
     # print ''
     # print __lex(j_wrong1)
@@ -252,13 +285,25 @@ if __name__ == '__main__':
             print thing
         print ''
 
-    plist(__lex(j1))
-    plist(__lex(j_wrong1))
-    plist(__lex(j_wrong2))
-    plist(__lex(j_wrong3))
-    plist(__lex(j_wrong4))
+    def pdick(dick):
+        for thing in dick:
+            print thing + ':' + str(dick[thing])
+        print ''
 
 
+    # plist(__lex(j1))
+    # plist(__lex(j_wrong1))
+    # plist(__lex(j_wrong2))
+    # plist(__lex(j_wrong3))
+    # plist(__lex(j_wrong4))
+
+    # plist(__lex(j_emb1))
+
+
+
+    pdick(json_to_dict(j_emb1))
+    print json_to_dict(j_emb1)
+    print len(json_to_dict(j_emb1))
 
 
 
