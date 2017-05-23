@@ -137,9 +137,22 @@ def __col_val(tokens, idx, cur_dict, is_embedded_doc_parse=False):
         emb_dic = {}
         emb_toks = []
 
-        while tokens[idx + 2] != '}':
+        braces_open = 0
+
+        while True:
             emb_toks.append(tokens[idx + 2])
+
+            if tokens[idx + 2] == '{':
+                braces_open += 1
+            elif tokens[idx + 2] == '}':
+                braces_open -= 1
+
+            if braces_open == 0:
+                break
+
             idx += 1
+
+
         emb_toks.append(tokens[idx + 2])
 
         __parse(emb_toks, 0, emb_dic, True)
@@ -280,6 +293,8 @@ def __lex(json_string):
         print '  oh noooo!'
         exit()
 
+    print tokens
+
     return tokens
 
 def __at_invalid_idx(token_list, idx):
@@ -303,6 +318,8 @@ if __name__ == '__main__':
     j_emb1 = '{name: "dick", child : <c_emb, child1>, pay : 90000}'
 
     j_emb2 = '{name: "joe", child : {_key : "sid1", name : "Jonny", age : 3}, pay : 90000} '
+    j_emb3 = ' {name: "grandfather", child : {_key : "sss", name: "joe", child : {_key : "sid1", name : "Jonny", age : 3}, pay : 90000} } '
+
 
     # print __lex(j1)
     # print ''
@@ -332,7 +349,7 @@ if __name__ == '__main__':
     # plist(__lex(j_wrong4))
 
 
-    emb_dd = json_to_dict(j_emb2)
+    emb_dd = json_to_dict(j_emb3)
 
     print emb_dd
     pdick(emb_dd)
