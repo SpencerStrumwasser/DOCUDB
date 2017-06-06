@@ -42,8 +42,8 @@ def generate_inserts(collection_name, num_docs, min_cols=1, max_cols=10, max_int
 	assert type(num_docs) == int
 	assert type(min_cols) == int
 	assert type(max_cols) == int
-	assert type(max_int) == int
-	assert type(max_dec) == int or type(max_dec) == float
+	assert type(max_int) == int or float
+	assert type(max_dec) == int or float
 	assert type(max_str) == int
 	assert min_cols >= 1
 

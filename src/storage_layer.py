@@ -255,7 +255,12 @@ class StorageLayer:
                 # write value
                 f.seek(start)
                 if values[key].val_type == 0:
-                    a,b,c,d = self.convert_int(values[key].val)
+                    if values[key].val >= 0:
+                        f.write('0')
+                        a,b,c,d = self.convert_int(values[key].val)
+                    else:
+                        f.write('1')
+                        a,b,c,d = self.convert_int(-values[key].val)
 
 
                     f.write(str(chr(d)))
@@ -344,8 +349,17 @@ class StorageLayer:
                 start += self.INT_SIZE
                 # write value
                 f.seek(start)
+
+
+
+
                 if val.val_type == 0:
-                    a,b,c,d = self.convert_int(val.val)
+                    if val.val >= 0:
+                        f.write('0')
+                        a,b,c,d = self.convert_int(val.val)
+                    else:
+                        f.write('1')
+                        a,b,c,d = self.convert_int(-val.val)
 
                     f.write(str(chr(d)))
                     f.write(str(chr(c)))
@@ -606,10 +620,14 @@ class StorageLayer:
             val_size = self.byte_to_int(binary[i:i+4])
             i += 4
             if(val_type == 0):
-                value = self.byte_to_int(binary[i:i+val_size])
+                flag = binary[i]
+
+                value = self.byte_to_int(binary[i+1:i+val_size])
+                if int(flag) == 1:
+                    value = -value
             elif(val_type == 3):
                 value = binary[i:i+val_size]
-                if value == 1:
+                if int(value) == 1:
                     value = True
                 else:
                     value = False
@@ -660,7 +678,11 @@ class StorageLayer:
             i += 4
             print val_type, val_size
             if(val_type == 0):
-                value = self.byte_to_int(binary[i:i+val_size])
+                flag = binary[i]
+
+                value = self.byte_to_int(binary[i+1:i+val_size])
+                if int(flag) == 1:
+                    value = -value
             elif val_type == 5:
                 value = self.binary_to_doc_data(binary[i:i+val_size]).user_values_dict
             elif val_type == 6:
@@ -669,7 +691,7 @@ class StorageLayer:
                 value = eval(binary[i:i+val_size].rstrip('\0'))
             elif(val_type == 3):
                 value = binary[i:i+val_size]
-                if value == 1:
+                if int(value) == 1:
                     value = True
                 else:
                     value = False
@@ -732,8 +754,12 @@ class StorageLayer:
                                         f.seek(traversal)
                                         #write new value
                                         if val_type == 0:
-                                            a,b,c,d = self.convert_int(int(copy_news[i]))
-
+                                            if int(copy_news[i]) >= 0:
+                                                f.write('0')
+                                                a,b,c,d = self.convert_int(int(copy_news[i]))
+                                            else:
+                                                f.write('1')
+                                                a,b,c,d = self.convert_int(-int(copy_news[i]))
                                             f.write(str(chr(d)))
                                             f.write(str(chr(c)))
                                             f.write(str(chr(b)))
