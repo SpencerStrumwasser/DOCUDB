@@ -1,6 +1,7 @@
 from query_generator import generate_inserts
 
 import sys
+import os
 sys.path.insert(0, '../src/')
 
 import myparser
@@ -13,12 +14,12 @@ p = myparser.Parser()
 
 
 def insert_test(collection_name, num_docs):
-	inserts = (generate_inserts(collection_name, num_docs, min_cols=1, max_cols=1, max_int=(10), max_dec=(2**31), max_str=10))
+	inserts = (generate_inserts(collection_name, num_docs, min_cols=1, max_cols=1, max_int=(2*31), max_dec=(2**31), max_str=10))
 	insert_str = inserts[0]
 	insert_dict = inserts [1]
 
 
-
+	sys.stdout = open(os.devnull, "w")
 	del_qurey = 'drop ' + collection_name
 	p.parse(del_qurey)
 
@@ -35,21 +36,25 @@ def insert_test(collection_name, num_docs):
 		p.parse(line)
 
 		
-
+	
 	res_sel = p.parse('select * from test_collection')
-	print '---------------------------\nExpected\n---------------------------'
-	print insert_dict
-	print '---------------------------\n********\n---------------------------'
+	sys.stdout = sys.__stdout__
+	count = 0
+	for i in range(0, len(insert_dict)):
+		if cmp(insert_dict[i], res_sel[i]) == 0:
+			print "Success"
+		else:
+			print '---------------------------\nExpected\n---------------------------'
+			print insert_dict
+			print '---------------------------\n********\n---------------------------'
 
-	print '---------------------------\nActual\n---------------------------'
-	print res_sel
-	print '---------------------------\n********\n---------------------------'
+			print '---------------------------\nActual\n---------------------------'
+			print res_sel
+			print '---------------------------\n********\n---------------------------'
+			print 'mismatch'
+			count += 1
+	return count
+y = 10
+x = insert_test('test_collection', y)
 
-	if cmp(insert_dict, res_sel) == 0:
-		pass
-	else:
-		print 'mismatch'
-
-insert_test('test_collection', 1)
-
-
+print str(x) + " Total Tests Failed out of " + str(y)
