@@ -39,6 +39,8 @@ Syntax:
 def json_to_dict(json_string):
 
     tokens = __lex(json_string)
+
+
     if '' in tokens:
         print 'Json Lex error in docudb_json_translator.'
         print inspect.currentframe().f_back.f_lineno
@@ -263,13 +265,13 @@ def __col_val(tokens, idx, cur_dict, is_embedded_doc_parse=False):
             elif val_tok == 'false':
                 val_lst.append(False)
 
-            elif val_tok.isdigit():
+            elif val_tok.isdigit() or (val_tok[1:].isdigit() and val_tok[0] == '-'):
                 int_val = int(val_tok)
 
 
                 # 4 bytes -> 32 bits for storing int. 1 bit for +/-
-                if abs(int_val) >= 2**31:
-                    print 'LIST Error: int values range from (-2147483647, 2147483647). 32 bit storage space'
+                if abs(int_val) >= 2**15:
+                    print 'LIST Error: int values range from (-2**15, 2**15). 32 bit storage space'
                     raise BaseException # todo catch better
                     return
                 else:
