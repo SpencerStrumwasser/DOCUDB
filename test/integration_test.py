@@ -13,20 +13,39 @@ p = myparser.Parser()
 
 
 def insert_test(collection_name, num_docs):
-	inserts = (generate_inserts(collection_name, num_docs, min_cols=1, max_cols=10, max_int=(2**31), max_dec=(2**31), max_str=10))[0]
+	inserts = (generate_inserts(collection_name, num_docs, min_cols=1, max_cols=10, max_int=(2**31), max_dec=(2**31), max_str=10))
+	insert_str = inserts[0]
+	insert_dict = inserts [1]
 
+
+	del_qurey = 'drop ' + collection_name
+	p.parse(del_qurey)
 
 	creation_qurey = 'create ' + collection_name
 	p.parse(creation_qurey)
 
 
-	for line in inserts.splitlines():
+	for line in insert_str.splitlines():
 		# print line
 		# print ''
 		p.parse(line)
 
+		
 
+	res_sel = p.parse('select * from test_collection')
+	print '---------------------------\nExpected\n---------------------------'
+	print insert_dict
+	print '---------------------------\n********\n---------------------------'
 
-insert_test('test_collection', 10)
+	print '---------------------------\nActual\n---------------------------'
+	print res_sel
+	print '---------------------------\n********\n---------------------------'
+
+	if cmp(insert_dict, res_sel) == 0:
+		pass
+	else:
+		print 'mismatch'
+
+insert_test('test_collection', 1)
 
 

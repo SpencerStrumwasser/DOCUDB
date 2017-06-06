@@ -23,7 +23,7 @@ while(True):
 	elif user_input == 'hello':
 		print 'Hi'	
 
-	elif user_input == 'show collections':
+	elif user_input == 'show collections' or user_input == 'ls':
 		files = os.listdir(ROOT_DATA_DIRECTORY)
 		for f in files:
 			print '\t' + f[:-3] # strip the .es file extension

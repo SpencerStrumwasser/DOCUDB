@@ -248,16 +248,16 @@ class Parser:
             self.__start_parse(tokens, 0)
         else:
             # print 'empty queries should not get here.'
-            return 
+            return {'error':1}
 
         if self.command.invalid == True:
             print 'Syntax Error'
-            return 
+            return {'error':1}
 
         ## todo: before calling storage layer, check if self.command.invalid == True
         # todo call storage layer? 
         self.__process_cmd()
-        self.__call_storage_layer()
+        return self.__call_storage_layer()
 
 
 
@@ -1216,7 +1216,7 @@ class Parser:
             self.__print_select(gettt)
 
 
-            return
+            return gettt
         # elif self.command.predicate[:9] == "(_key == ":
         #     if self.command.predicate.count('"', 0, len(self.command.predicate)) == 2:
         #         for i in range(10, len(self.command.predicate)):
@@ -1229,6 +1229,7 @@ class Parser:
         print "Finding Document for predicate: " + self.command.predicate
         gettt = sl.get_all_tuples(self.command.predicate)
         self.__print_select(gettt)
+        return gettt
 
 
     def __update_storage_layer(self, filename):
@@ -1320,7 +1321,7 @@ class Parser:
         if verb == 'insert':
             self.__insert_storage_layer(filename)
         elif verb == 'select':
-            self.__select_storage_layer(filename)
+            return self.__select_storage_layer(filename)
         elif verb == 'update':
             self.__update_storage_layer(filename)
         elif verb == 'upsert':
@@ -1331,7 +1332,7 @@ class Parser:
             self.__drop_storage_layer(filename)
 
 
-        return True
+        return {'success':1}
             
 
 

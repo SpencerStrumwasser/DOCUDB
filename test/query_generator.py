@@ -21,7 +21,7 @@ Not yet supported datatypes:
 NUM_DATATYPES = 4 # currently 4 different datatypes 
 
 
-def generate_inserts(collection_name, num_docs, min_cols=1, max_cols=10, max_int=(2**31), max_dec=(2**31), max_str=999999):
+def generate_inserts(collection_name, num_docs, min_cols=1, max_cols=10, max_int=(2**31), max_dec=(2**31), max_str=999999, only_str=False):
 	'''
 	Generates a string of insert statements, filled with random data
 
@@ -35,7 +35,7 @@ def generate_inserts(collection_name, num_docs, min_cols=1, max_cols=10, max_int
 
 	return: (string with queries, list of dictionaries corresponding to inserted docs)
 	'''
-	print max_int
+	# print max_int
 
 
 	assert type(collection_name) == str
@@ -49,7 +49,7 @@ def generate_inserts(collection_name, num_docs, min_cols=1, max_cols=10, max_int
 
 	# insert into <collection> <key_name>  {col_name1 : val1, col_name2: val2, ...}  
 
-	str_ins_queries = '\n' # String of insert queries
+	str_ins_queries = '' # String of insert queries
 	lst_ins_queries = [] # List of documents being inserted 
 
 	# Each document
@@ -65,7 +65,7 @@ def generate_inserts(collection_name, num_docs, min_cols=1, max_cols=10, max_int
 			
 			# int 
 			# if val_type == 0:
-			if False:
+			if True:
 				ival = random.randrange(-max_int + 1, max_int)
 				val = str(ival)
 				cur_ins_dict[('column' + str(col_num))] = ival
@@ -85,7 +85,7 @@ def generate_inserts(collection_name, num_docs, min_cols=1, max_cols=10, max_int
 			# bool
 			# elif val_type == 3:
 			# TODO: problems with booleans 
-			if True:
+			if False:
 				bval = random.choice([True, False])
 				val = str(bval).lower()
 				cur_ins_dict[('column' + str(col_num))] = bval
