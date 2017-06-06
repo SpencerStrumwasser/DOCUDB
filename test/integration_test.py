@@ -83,9 +83,12 @@ def dic_list_cmp(lst1, lst2):
 	
 
 def insert_test(collection_name, num_docs):
-	inserts = (generate_inserts(collection_name, num_docs, min_cols=1, max_cols=1, max_int=10, max_dec=(2**31), max_str=1000))
+	inserts = (generate_inserts(collection_name, num_docs, min_cols=1, max_cols=1, max_int=10, max_dec=.000001, max_str=3))
 	insert_str = inserts[0]
 	insert_dict = inserts [1]
+
+	print insert_str
+	print insert_dict
 
 
 	sys.stdout = open(os.devnull, "w")
@@ -114,13 +117,13 @@ def insert_test(collection_name, num_docs):
 	for i in range(0, len(insert_dict)):
 		if cmp(insert_dict[i], res_sel[i]) == 0:
 
-			print '---------------------------\nExpected\n---------------------------'
-			print insert_dict
-			print '---------------------------\n********\n---------------------------'
+			# print '---------------------------\nExpected\n---------------------------'
+			# print insert_dict
+			# print '---------------------------\n********\n---------------------------'
 
-			print '---------------------------\nActual\n---------------------------'
-			print res_sel
-			print '---------------------------\n********\n---------------------------'
+			# print '---------------------------\nActual\n---------------------------'
+			# print res_sel
+			# print '---------------------------\n********\n---------------------------'
 
 			print "Success"
 		else:

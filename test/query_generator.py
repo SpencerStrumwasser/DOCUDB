@@ -18,10 +18,10 @@ Not yet supported datatypes:
 
 '''
 
-NUM_DATATYPES = 4 # currently 4 different datatypes 
+NUM_DATATYPES = 5 # currently 7 different datatypes 
 
 
-def generate_inserts(collection_name, num_docs, min_cols=1, max_cols=10, max_int=(2**15-1), max_dec=(2**31), max_str=999999, only_str=False):
+def generate_inserts(collection_name, num_docs, min_cols=1, max_cols=10, max_int=(2**15-1), max_dec=(1), max_str=999999, only_str=False):
 	'''
 	Generates a string of insert statements, filled with random data
 
@@ -60,37 +60,87 @@ def generate_inserts(collection_name, num_docs, min_cols=1, max_cols=10, max_int
 		# Each column
 		num_cols = random.randrange(min_cols, max_cols+1)
 		for col_num in range(num_cols):
+
 			val_type = random.randrange(0, NUM_DATATYPES)
+			val_type = 4
+
+
+
 			val = ''
 			
-			# int 
-			# if val_type == 0:
-			if False:
-				ival = random.randrange(-max_int + 1, max_int)
-				val = str(ival)
-				cur_ins_dict[('column' + str(col_num))] = ival
-			# dec
-			# elif val_type == 1:
-			if True:
-				dval = random.randrange(-max_dec + 1, max_dec - 1) + random.random()
-				val = str(dval)
-				cur_ins_dict[('column' + str(col_num))] = dval
-			# string
-			# elif val_type == 2:
-			if False:
-				# sval = ''.join(random.choice(string.printable) for i in range(max_str)) # produces ugly strings
-				sval = ''.join(random.choice(string.digits+string.letters+'-_') for i in range(max_str))
-				val = '"' + sval + '"'
-				cur_ins_dict[('column' + str(col_num))] = sval
-			# bool
-			# elif val_type == 3:
-			# TODO: problems with booleans 
-			if False:
-				bval = random.choice([True, False])
-				val = str(bval).lower()
-				cur_ins_dict[('column' + str(col_num))] = bval
+			def __base_type(val_type, cur_ins_dict):
+				# int 
+				if val_type == 0:
+				# if False:
+					ival = random.randrange(-max_int + 1, max_int)
+					val = str(ival)
+					cur_ins_dict[('column' + str(col_num))] = ival
+					return val
+				# dec
+				elif val_type == 1:
+				# if True:
+					dval = random.uniform(-max_dec, max_dec)
+					val = str(dval)
+					cur_ins_dict[('column' + str(col_num))] = float(str(dval))
+					return val
+				# string
+				elif val_type == 2:
+				# if False:
+					# sval = ''.join(random.choice(string.printable) for i in range(max_str)) # produces ugly strings
+					sval = ''.join(random.choice(string.digits+string.letters+'-_') for i in range(max_str))
+					val = '"' + sval + '"'
+					cur_ins_dict[('column' + str(col_num))] = sval
+					return val
+				# bool
+				elif val_type == 3:
+				# TODO: problems with booleans 
+				# if False:
+					bval = random.choice([True, False])
+					val = str(bval).lower()
+					cur_ins_dict[('column' + str(col_num))] = bval
+					return val
+
+			if val_type in [0,1,2,3]:
+				val = __base_type(val_type, cur_ins_dict)
+			
+			# embedded Doc
+			elif val_type == 4:
+
+				val = '{'
+				val += '_key' +  ' : ' + '"keyyyy"' + ', '
+
+				sub_cur_ins_dict = {}
+				sub_cur_ins_dict['_key'] = 'keyyyy'
+				sub_val = ''
+
+
+				num_subcols = random.randrange(min_cols, max_cols+1)
+				for sub_col_num in range(num_subcols):
+					sub_val_type = random.randrange(0, 4)
+					sub_val = __base_type(sub_val_type, sub_cur_ins_dict)
+
+					val += 'column' + str(sub_col_num) + ' : ' + sub_val + ', '
+
+				val = val[:-2]
+				val += '}'
+
+				cur_ins_dict[('column' + str(col_num))] = sub_cur_ins_dict
+				
+
+			# reference Doc
+			elif val_type == 5:
+				pass
+
+			# list
+			elif val_type == 6:
+				pass
+
 
 			cur_ins_query += 'column' + str(col_num) + ' : ' + val + ', '
+
+
+
+
 
 		cur_ins_query = cur_ins_query[:-2]
 		cur_ins_query += '}'
