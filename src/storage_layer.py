@@ -1055,8 +1055,6 @@ class StorageLayer:
                     allocated_temp = data[data_start + self.BOOLEAN_SIZE: data_start + self.BOOLEAN_SIZE + self.INT_SIZE]
                     allocated = self.byte_to_int(allocated_temp)
                     if dirty == 1:
-                        # print keys
-                        datakey = data[data_start + self.BOOLEAN_SIZE + 2 * self.INT_SIZE:data_start + self.BOOLEAN_SIZE + 2 * self.INT_SIZE + 30].rstrip('\0')
                         # print datakey
                         f.seek(start)   
                         data_temp = f.read(allocated)
@@ -1095,7 +1093,7 @@ class StorageLayer:
     def __create_embedded_doc(self, columns):
 
         file_to_insert = DocumentData(0,0, columns['_key'])
-        memory_needed = 0
+        memory_needed = 39
         for key, value in columns.iteritems():
             insert_key = str(key)
             if insert_key == '_key':
