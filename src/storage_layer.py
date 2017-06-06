@@ -607,7 +607,7 @@ class StorageLayer:
             i += 4
             if(val_type == 0):
                 value = self.byte_to_int(binary[i:i+val_size])
-            if(val_type == 3):
+            elif(val_type == 3):
                 value = binary[i:i+val_size]
                 if value == 1:
                     value = True
@@ -667,6 +667,12 @@ class StorageLayer:
                 value = self.binaryList_to_doc_data(binary[i:i+val_size]).user_values
             elif val_type == 4:
                 value = eval(binary[i:i+val_size].rstrip('\0'))
+            elif(val_type == 3):
+                value = binary[i:i+val_size]
+                if value == 1:
+                    value = True
+                else:
+                    value = False
             else:
                 value = binary[i:i+val_size].rstrip('\0')
             i += val_size
