@@ -423,13 +423,15 @@ class StorageLayer:
             return False
 
 
-    def delete_by_predicate(self, exp):
+    def delete_by_predicate(self, proj, exp, ignore_no_col=True):
         '''
         todo: write methdo summary
 
-        deletes whole document
+        deletes columns or whole document
 
-        input: keys ->
+        input: proj -> list of cols to delete, or [] to delete the whole row
+        exp -> prediacte in where
+        ignore_no_col -> if should ignore user error of specifying col that does not exist
         return ->
 
         '''
@@ -466,9 +468,24 @@ class StorageLayer:
                         doc_data = self.binary_to_doc_data(document_binary)
                         cols = doc_data.user_values_dict
                         if predicate_evaluator.eval_pred(exp, cols) == True:
-                            # keys.remove(datakey)
-                            f.seek(start)
-                            f.write('0')
+                            if len(proj) == 0: # delete whole row
+                                # keys.remove(datakey)
+                                f.seek(start)
+                                f.write('0')
+                            else: # deleting cols
+                                for col_to_delete in proj:
+                                    if doc_data.has_col(col_to_delete):
+                                        doc_data.delete_col(col_to_delete)
+                                    else:
+                                        if ignore_no_col:
+                                            print 'Warning: Column specified does not exist. Continuing.'
+                                        else:
+                                            pass # oops cannot roll back
+                                            # print 'Error: Column specified does not exist. Delete not executed.'
+                                            # return False
+
+                                self.write_data_to_memory(start, doc_data)              
+
                     # if len(keys) == 0:
                     #     return True
                     data_start += allocated
@@ -760,6 +777,11 @@ class StorageLayer:
 
         replace: 
         keys
+        
+        exp -> predicate in where
+        columns -> list of cols
+        news -> list of new values
+        insert_flag -> 1 for upsert, 0 for update
 
         '''
         with open(self.filename, 'r+b') as f:
@@ -784,6 +806,7 @@ class StorageLayer:
                     dirty = int(data[data_start])
                     allocated_temp = data[data_start + self.BOOLEAN_SIZE: data_start + self.BOOLEAN_SIZE + self.INT_SIZE]
                     allocated = self.byte_to_int(allocated_temp)                    
+                    
                     if dirty == 1:
                         # datakey = data[data_start + self.BOOLEAN_SIZE + 2 * self.INT_SIZE:data_start + self.BOOLEAN_SIZE + 2 * self.INT_SIZE + 30].rstrip('\0')
                         f.seek(start)   
@@ -794,78 +817,154 @@ class StorageLayer:
                         doc_data = self.binary_to_doc_data(document_binary)
                         cols = doc_data.user_values_dict
                         if predicate_evaluator.eval_pred(exp, cols) == True:
+                            #  (self, exp, columns, news, insert_flag)
 
-                            traversal = start + self.BOOLEAN_SIZE + 2 * self.INT_SIZE + 30
-                            f.seek(traversal)
-                            filled_loc = start + self.BOOLEAN_SIZE + self.INT_SIZE
-                            filled_start = start
-                            copy_columns = columns[:]
-                            copy_news = news[:]
-                            while len(copy_columns) != 0:
-                                col_len = f.read(1)
+                            for i in range(len(columns)):
+                                col = columns[i]
+                                new_val = news[i]
+
+                                if doc_data.has_col(col): # update this col
+                                    col_size = int(doc_data.values[col].col_name_len)
+                                    doc_data.delete_col(col)
+                                    
+                                    if isinstance(new_val, tuple):
+                                        value_size = len(str(value))
+                                        doc_data.add_value(col, col_size, 4, value_size, str(new_val))
+                                    elif isinstance(new_val, str):
+                                        value_size = len(new_val)
+                                        doc_data.add_value(col, col_size, 2, value_size, new_val)
+                                    elif isinstance(new_val, bool):
+                                        doc_data.add_value(col, col_size, 3, 1, new_val)
+                                    elif isinstance(new_val, int):
+                                        doc_data.add_value(col, col_size, 0, 4, new_val)
+                                    elif isinstance(new_val, float):
+                                        value_size = len(str(new_val))
+                                        doc_data.add_value(col, col_size, 1, value_size, str(new_val))
+                                    elif isinstance(new_val, dict):
+                                        embed_doc = self.__create_embedded_doc(new_val)
+                                        value_size = embed_doc.allocated_size
+                                        doc_data.add_value(col, col_size, 5, value_size, embed_doc)
+                                    elif isinstance(new_val, list):
+                                        embed_lis = self.__create_list(new_val)
+                                        value_size = embed_lis.allocated_size
+                                        doc_data.add_value(col, col_size, 6, value_size, embed_lis)
+
+                                else:
+                                    if insert_flag: # upsert
+
+                                        if isinstance(new_val, tuple):
+                                            value_size = len(str(value))
+                                            doc_data.add_value(col, len(col), 4, value_size, str(new_val))
+                                        elif isinstance(new_val, str):
+                                            value_size = len(new_val)
+                                            doc_data.add_value(col, len(col), 2, value_size, new_val)
+                                        elif isinstance(new_val, bool):
+                                            doc_data.add_value(col, len(col), 3, 1, new_val)
+                                        elif isinstance(new_val, int):
+                                            doc_data.add_value(col, len(col), 0, 4, new_val)
+                                        elif isinstance(new_val, float):
+                                            value_size = len(str(new_val))
+                                            doc_data.add_value(col, len(col), 1, value_size, str(new_val))
+                                        elif isinstance(new_val, dict):
+                                            embed_doc = self.__create_embedded_doc(new_val)
+                                            value_size = embed_doc.allocated_size
+                                            doc_data.add_value(col, len(col), 5, value_size, embed_doc)
+                                        elif isinstance(new_val, list):
+                                            embed_lis = self.__create_list(new_val)
+                                            value_size = embed_lis.allocated_size
+                                            doc_data.add_value(col, len(col), 6, value_size, embed_lis)
+
+                                    else: # give warning
+                                        pass
+
+
+                            # traversal = start + self.BOOLEAN_SIZE + 2 * self.INT_SIZE + 30
+                            # f.seek(traversal)
+                            # filled_loc = start + self.BOOLEAN_SIZE + self.INT_SIZE
+                            # filled_start = start
+                            # copy_columns = columns[:]
+                            # copy_news = news[:]
+                            # while len(copy_columns) != 0:
+                            #     col_len = f.read(1)
                                                              
-                                if col_len == '\0' :
-                                    break
-                                col_len = int(bin(ord(col_len)),2)
-                                traversal += 1
-                                col_name = f.read(col_len)
-                                traversal += col_len
-                                val_type = int(bin(ord(f.read(1))),2)
-                                f.seek(traversal + 1)
-                                val_size = self.byte_to_int(f.read(self.INT_SIZE))
-                                traversal += 1 + self.INT_SIZE
-                                for i in range(0, len(copy_columns)):
-                                    if (col_name) == copy_columns[i]:
-                                        f.seek(traversal)
-                                        #write new value
-                                        if val_type == 0:
-                                            a,b,c,d = self.convert_int(int(copy_news[i]))
+                            #     if col_len == '\0' :
+                            #         break
+                            #     col_len = int(bin(ord(col_len)),2)
+                            #     traversal += 1
+                            #     col_name = f.read(col_len)
+                            #     traversal += col_len
+                            #     val_type = int(bin(ord(f.read(1))),2)
+                            #     f.seek(traversal + 1)
+                            #     val_size = self.byte_to_int(f.read(self.INT_SIZE))
+                            #     traversal += 1 + self.INT_SIZE
+                            #     for i in range(0, len(copy_columns)):
+                            #         if (col_name) == copy_columns[i]:
+                            #             f.seek(traversal)
+                            #             #write new value
+                            #             if val_type == 0:
+                            #                 a,b,c,d = self.convert_int(int(copy_news[i]))
 
-                                            f.write(str(chr(d)))
-                                            f.write(str(chr(c)))
-                                            f.write(str(chr(b)))
-                                            f.write(str(chr(a)))
+                            #                 f.write(str(chr(d)))
+                            #                 f.write(str(chr(c)))
+                            #                 f.write(str(chr(b)))
+                            #                 f.write(str(chr(a)))
                                             
                                                 
-                                        else:
-                                            f.write(bytes(copy_news[i]))
+                            #             else:
+                            #                 f.write(bytes(copy_news[i]))
                                                                                     
-                                        copy_columns.remove(col_name)
-                                        del copy_news[i]
+                            #             copy_columns.remove(col_name)
+                            #             del copy_news[i]
 
-                                        break
-                                traversal += val_size
-                                f.seek(traversal)
+                            #             break
+                            #     traversal += val_size
+                            #     f.seek(traversal)
                                         
-                            if len(copy_columns) != 0 and insert_flag == 1:
+                            # if len(copy_columns) != 0 and insert_flag == 1:
 
-                                f.seek(traversal)
-                                for i in range(0, len(copy_columns)):
-                                    temp_len = len(copy_columns[i])
-                                    a = self.convert_single_byte(temp_len)
-                                    f.write(str(chr(a)))
-                                    f.write(copy_columns[i])
-                                    f.write(str(chr(self.convert_single_byte(2))))
+                            #     f.seek(traversal)
+                            #     for i in range(0, len(copy_columns)):
+                            #         temp_len = len(copy_columns[i])
+                            #         a = self.convert_single_byte(temp_len)
+                            #         f.write(str(chr(a)))
+                            #         f.write(copy_columns[i])
+                            #         f.write(str(chr(self.convert_single_byte(2))))
 
 
-                                    a,b,c,d = self.convert_int(len(copy_news[i]))
+                            #         a,b,c,d = self.convert_int(len(copy_news[i]))
 
-                                    f.write(str(chr(d)))
-                                    f.write(str(chr(c)))
-                                    f.write(str(chr(b)))
-                                    f.write(str(chr(a)))
+                            #         f.write(str(chr(d)))
+                            #         f.write(str(chr(c)))
+                            #         f.write(str(chr(b)))
+                            #         f.write(str(chr(a)))
 
-                                    traversal += 1 + temp_len + 1 + 4
-                                    f.seek(traversal)
-                                    f.write(copy_news[i])
-                                f.seek(filled_loc)
-                                a,b,c,d = self.convert_int(traversal - filled_start)
+                            #         traversal += 1 + temp_len + 1 + 4
+                            #         f.seek(traversal)
+                            #         f.write(copy_news[i])
+                            #     f.seek(filled_loc)
+                            #     a,b,c,d = self.convert_int(traversal - filled_start)
 
-                                f.write(str(chr(d)))
-                                f.write(str(chr(c)))
-                                f.write(str(chr(b)))
-                                f.write(str(chr(a)))
+                            #     f.write(str(chr(d)))
+                            #     f.write(str(chr(c)))
+                            #     f.write(str(chr(b)))
+                            #     f.write(str(chr(a)))
 
+                            if doc_data.filled_size > doc_data.allocated_size:
+                                # if exceed current allocation, double allocation in documentData object,
+                                # then delete current block in memory, and write to a new block.
+                                for ite in range(10, 25):
+                                    if (doc_data.filled < 2**ite):
+                                        break
+                                doc_data.allocated_size = 2**ite
+
+                                f.seek(start)
+                                f.write('0')
+
+                                new_size = self.search_memory_for_free(doc_data.allocated)
+                                self.write_data_to_memory(new_size, doc_data)
+
+                            else:
+                                self.write_data_to_memory(start, doc_data)
 
                     data_start += allocated
                     start +=allocated
@@ -946,3 +1045,94 @@ class StorageLayer:
         # TODO: write functino to convert all datatypes for correct
         # storage
             
+
+    ## TODO: This function is defined twice (second time in myparser.py). oops
+    def __create_embedded_doc(self, columns):
+
+        file_to_insert = DocumentData(0,0, columns['_key'])
+        memory_needed = 0
+        for key, value in columns.iteritems():
+            insert_key = str(key)
+            if insert_key == '_key':
+                continue
+            col_size = len(str(key))
+            memory_needed += col_size + 4
+            if isinstance(value, tuple):
+                value_size = len(str(value))
+                file_to_insert.add_value(insert_key, col_size, 4, value_size, str(value))
+                memory_needed += 1 + value_size + 4
+            elif isinstance(value, str):
+                value_size = len(value)
+                file_to_insert.add_value(insert_key, col_size, 2, value_size, value)
+                memory_needed += 1 + value_size + 4
+            elif isinstance(value, bool):
+                file_to_insert.add_value(insert_key, col_size, 3, 1, value)
+                memory_needed += 1 + 4 + 1
+            elif isinstance(value, int):
+                file_to_insert.add_value(insert_key, col_size, 0, 4, value)
+                memory_needed += 1 + 4 + 4
+            elif isinstance(value, float):
+                value_size = len(str(value))
+                file_to_insert.add_value(insert_key, col_size, 1, value_size, str(value))
+                memory_needed += 1 + value_size + 4
+            elif isinstance(value, dict):
+                embed_doc = self.__create_embedded_doc(value)
+                value_size = embed_doc.allocated_size
+                file_to_insert.add_value(insert_key, col_size, 5, value_size, embed_doc)
+                memory_needed += 1 + value_size + 4
+            elif isinstance(value, list):
+                embed_lis = self.__create_list(value)
+                value_size = embed_lis.allocated_size
+                file_to_insert.add_value(insert_key, col_size, 6, value_size, embed_lis)
+                memory_needed += 1 + value_size + 4
+
+        for ite in range(10, 25):
+            if (memory_needed < 2**ite):
+                break
+        file_to_insert.allocated_size = 2**ite
+        # print file_to_insert.allocated_size
+        return file_to_insert
+
+    ## TODO: This function is defined twice(second time in myparser.py). oops
+    def __create_list(self, columns):
+
+        file_to_insert = ListData(0,0)
+        memory_needed = 9
+        for value in columns:
+            if isinstance(value, tuple):
+                value_size = len(str(value))
+                file_to_insert.add_value(4, value_size, str(value))
+                memory_needed += 1 + value_size + 4
+            elif isinstance(value, str):
+                value_size = len(value)
+                file_to_insert.add_value(2, value_size, value)
+                memory_needed += 1 + value_size + 4
+            elif isinstance(value, bool):
+                file_to_insert.add_value(3, 1, value)
+                memory_needed += 1 + 4 + 1
+            elif isinstance(value, int):
+                file_to_insert.add_value(0, 4, value)
+                memory_needed += 1 + 4 + 4
+            elif isinstance(value, float):
+                value_size = len(str(value))
+                file_to_insert.add_value(1, value_size, str(value))
+                memory_needed += 1 + value_size + 4
+            elif isinstance(value, dict):
+                embed_doc = self.__create_embedded_doc(value)
+                value_size = embed_doc.allocated_size
+                file_to_insert.add_value(5, value_size, embed_doc)
+                memory_needed += 1 + value_size + 4
+            elif isinstance(value, list):
+                embed_lis = self.__create_list(value)
+                value_size = embed_lis.allocated_size
+                file_to_insert.add_value(6, value_size, embed_lis)
+                memory_needed += 1 + value_size + 4
+        file_to_insert.allocated_size = memory_needed
+        # print file_to_insert.allocated_size
+        print "fuck this shit MOTHERF", file_to_insert.user_values
+        return file_to_insert
+
+
+
+
+

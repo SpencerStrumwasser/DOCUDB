@@ -5,7 +5,7 @@ class DocumentData:
 	document data and metadata.
 
 	| 1B - filled flag | 4B - space allocated for row | 4B - space filled in row | 30B - Key_name|
-	| 1B - col name length | 1~255B - col name | 1B - value type | 4B - value size| ?B - value|
+	| 4B - col name length | 1~255B - col name | 1B - value type | 4B - value size| ?B - value|
 	'''
 
 	class ValueData:
@@ -27,11 +27,34 @@ class DocumentData:
 		self.key_name = key_name
 		self.values = {}
 		self.user_values_dict = {"_key": key_name} #  just the values for display. no storage layer info
-		self.values_order = None # TODO1: implement later
+		self.values_order = None # TODO1: can implement later
 
 	def add_value(self, col_name, col_name_len, val_type, val_size, val):
 		self.values[col_name] = self.ValueData(col_name_len, val_type, val_size, val)
 		self.user_values_dict[col_name] = val
+		self.filled_size += (9 + int(col_name_len) + int(val_size))
+
+
+
+	def has_col(self, col_name):
+		return col_name in self.values
+
+	def delete_col(self, col_name):
+		'''
+		DOES NOT CHECK IF COL IS PRESENT!
+		'''
+		self.filled_size -= (9 + int(self.values[col_name].col_name_len) + int(self.values[col_name].val_size))
+
+		del self.values[col_name]
+		del self.user_values_dict[col_name]
+
+
+	# def update_col(self, col_name, val_type, val_size, val):
+	# 	col_name_len = int(self.values[col_name].col_name_len)
+	# 	self.delete_col(col_name)
+	# 	self.add_value(col_name, col_name_len, val_type, val_size, val)
+
+
 
 
 class DocumentPresentation:

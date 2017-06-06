@@ -988,7 +988,7 @@ class Parser:
 
 
 
-
+    ## TODO: This function is defined twice (second time in storage_layer.py). oops
     def __create_embedded_doc(self, columns):
 
         file_to_insert = DocumentData(0,0, columns['_key'])
@@ -1035,6 +1035,7 @@ class Parser:
         # print file_to_insert.allocated_size
         return file_to_insert
 
+    ## TODO: This function is defined twice(second time in storage_layer.py). oops
     def __create_list(self, columns):
 
         file_to_insert = ListData(0,0)
@@ -1275,7 +1276,7 @@ class Parser:
         sl = StorageLayer(filename)
         if self.command.predicate == None:
              print "Deleting all documents"
-             sl.delete_by_predicate(self.command.predicate)
+             sl.delete_by_predicate(self.command.projection, self.command.predicate)
              return
         # elif self.command.predicate[:9] == "(_key == ":
         #     if self.command.predicate.count('"', 0, len(self.command.predicate)) == 2:
@@ -1287,7 +1288,7 @@ class Parser:
         #                 return
 
         print "Deleting All Documents Satisfying Predicate", self.command.predicate
-        sl.delete_by_predicate(self.command.predicate)
+        sl.delete_by_predicate(self.command.projection, self.command.predicate)
  
     def __drop_storage_layer(self, filename):
         sl = StorageLayer(filename)
