@@ -992,7 +992,7 @@ class Parser:
     def __create_embedded_doc(self, columns):
 
         file_to_insert = DocumentData(0,0, columns['_key'])
-        memory_needed = 0
+        memory_needed = 39
         for key, value in columns.iteritems():
             insert_key = str(key)
             if insert_key == '_key':
@@ -1071,7 +1071,6 @@ class Parser:
                 memory_needed += 1 + value_size + 4
         file_to_insert.allocated_size = memory_needed
         # print file_to_insert.allocated_size
-        print "fuck this shit MOTHERF", file_to_insert.user_values
         return file_to_insert
 
 
@@ -1085,7 +1084,7 @@ class Parser:
         sl = StorageLayer(filename)
         print self.command.insert_key_name
         file_to_insert = DocumentData(0,0, self.command.insert_key_name)
-        memory_needed = 0
+        memory_needed = 39
         columns = self.command.json_doc
         for key, value in columns.iteritems():
             insert_key = str(key)
