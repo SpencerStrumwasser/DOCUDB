@@ -56,7 +56,7 @@ def insert_test2(collection_name, num_docs):
 
 
 def insert_test(collection_name, num_docs):
-	inserts = (generate_inserts(collection_name, num_docs, min_cols=1, max_cols=1, max_int=10, max_dec=(2**31), max_str=10))
+	inserts = (generate_inserts(collection_name, num_docs, min_cols=6, max_cols=14, max_int=10, max_dec=(2**31), max_str=600))
 	insert_str = inserts[0]
 	insert_dict = inserts [1]
 
@@ -87,16 +87,13 @@ def insert_test(collection_name, num_docs):
 	for i in range(0, len(insert_dict)):
 		if cmp(insert_dict[i], res_sel[i]) == 0:
 
+			# print '---------------------------\nExpected\n---------------------------'
+			# print insert_dict
+			# print '---------------------------\n********\n---------------------------'
 
-			print '---------------------------\nExpected\n---------------------------'
-			print insert_dict
-			print '---------------------------\n********\n---------------------------'
-
-			print '---------------------------\nActual\n---------------------------'
-			print res_sel
-			print '---------------------------\n********\n---------------------------'
-
-
+			# print '---------------------------\nActual\n---------------------------'
+			# print res_sel
+			# print '---------------------------\n********\n---------------------------'
 
 			print "Success"
 		else:
@@ -112,10 +109,10 @@ def insert_test(collection_name, num_docs):
 	return count
 
 
-num_docs = 1
+num_docs = 100
 tests_failed = insert_test('test_collection', num_docs)
 
-print str(tests_failed) + " Total Docs mismatched Failed out of " + str(num_docs)
+print str(tests_failed) + " Total Docs mismatched out of " + str(num_docs)
 
 
 

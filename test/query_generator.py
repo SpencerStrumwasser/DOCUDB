@@ -65,7 +65,7 @@ def generate_inserts(collection_name, num_docs, min_cols=1, max_cols=10, max_int
 			
 			# int 
 			# if val_type == 0:
-			if True:
+			if False:
 				ival = random.randrange(-max_int + 1, max_int)
 				val = str(ival)
 				cur_ins_dict[('column' + str(col_num))] = ival
@@ -77,7 +77,7 @@ def generate_inserts(collection_name, num_docs, min_cols=1, max_cols=10, max_int
 				cur_ins_dict[('column' + str(col_num))] = dval
 			# string
 			# elif val_type == 2:
-			if False:
+			if True:
 				# sval = ''.join(random.choice(string.printable) for i in range(max_str)) # produces ugly strings
 				sval = ''.join(random.choice(string.digits+string.letters+'-_') for i in range(max_str))
 				val = '"' + sval + '"'
