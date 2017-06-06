@@ -1101,6 +1101,10 @@ class Parser:
                 file_to_insert.add_value(insert_key, col_size, 2, value_size, value)
                 memory_needed += 1 + value_size + 4
             elif isinstance(value, bool):
+                if value:
+                    value = 1
+                else:
+                    value = 0
                 file_to_insert.add_value(insert_key, col_size, 3, 1, value)
                 memory_needed += 1 + 4 + 1
             elif isinstance(value, int):
@@ -1121,9 +1125,12 @@ class Parser:
                 file_to_insert.add_value(insert_key, col_size, 6, value_size, embed_lis)
                 memory_needed += 1 + value_size + 4
 
-        for ite in range(10, 25):
+        for ite in range(10, 26):
             if (memory_needed < 2**ite):
                 break
+        if ite == 25:
+            print ("Document is too big - Document was not inserted")
+            return False
         file_to_insert.allocated_size = 2**ite
         # print file_to_insert.allocated_size
         sl.write_data_to_memory(sl.search_memory_for_free(file_to_insert), file_to_insert)

@@ -263,6 +263,11 @@ class StorageLayer:
                     f.write(str(chr(b)))
                     f.write(str(chr(a)))
                     start += values[key].val_size
+                
+
+                elif values[key].val_type == 0:       
+                    f.write(str(values.val))
+                    start += values[key].val_size
 
                 elif values[key].val_type == 5:
                     self.write_data_to_memory(start, values[key].val)
@@ -321,7 +326,6 @@ class StorageLayer:
             start += self.INT_SIZE
 
             values = lis.values
-            print "FUCK YOU MOTHER"
             for val in values:
                 print val
                 # write value type
@@ -603,6 +607,12 @@ class StorageLayer:
             i += 4
             if(val_type == 0):
                 value = self.byte_to_int(binary[i:i+val_size])
+            if(val_type == 3):
+                value = binary[i:i+val_size]
+                if value == 1:
+                    value = True
+                else:
+                    value = False
             elif val_type == 5:
                 value = self.binary_to_doc_data(binary[i:i+val_size]).user_values_dict
             elif val_type == 6:
@@ -952,9 +962,12 @@ class StorageLayer:
                             if doc_data.filled_size > doc_data.allocated_size:
                                 # if exceed current allocation, double allocation in documentData object,
                                 # then delete current block in memory, and write to a new block.
-                                for ite in range(10, 25):
+                                for ite in range(10, 26):
                                     if (doc_data.filled < 2**ite):
                                         break
+                                if ite == 25:
+                                    print ("Document is now Too Big - Document Unchanged")
+                                    return False
                                 doc_data.allocated_size = 2**ite
 
                                 f.seek(start)
