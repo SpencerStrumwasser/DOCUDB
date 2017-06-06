@@ -21,7 +21,7 @@ Not yet supported datatypes:
 NUM_DATATYPES = 4 # currently 4 different datatypes 
 
 
-def generate_inserts(collection_name, num_docs, min_cols=1, max_cols=10, max_int=(2**15 - 1), max_dec=(2**31), max_str=999999, only_str=False):
+def generate_inserts(collection_name, num_docs, min_cols=1, max_cols=10, max_int=(2**15-1), max_dec=(2**31), max_str=999999, only_str=False):
 	'''
 	Generates a string of insert statements, filled with random data
 
@@ -67,9 +67,6 @@ def generate_inserts(collection_name, num_docs, min_cols=1, max_cols=10, max_int
 			# if val_type == 0:
 			if True:
 				ival = random.randrange(-max_int + 1, max_int)
-
-				ival = abs(ival)
-
 				val = str(ival)
 				cur_ins_dict[('column' + str(col_num))] = ival
 			# dec
