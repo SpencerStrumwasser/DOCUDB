@@ -1008,6 +1008,10 @@ class Parser:
                 file_to_insert.add_value(insert_key, col_size, 2, value_size, value)
                 memory_needed += 1 + value_size + 4
             elif isinstance(value, bool):
+                if value:
+                    value = 1
+                else:
+                    value = 0
                 file_to_insert.add_value(insert_key, col_size, 3, 1, value)
                 memory_needed += 1 + 4 + 1
             elif isinstance(value, int):
@@ -1050,6 +1054,10 @@ class Parser:
                 file_to_insert.add_value(2, value_size, value)
                 memory_needed += 1 + value_size + 4
             elif isinstance(value, bool):
+                if value:
+                    value = 1
+                else:
+                    value = 0
                 file_to_insert.add_value(3, 1, value)
                 memory_needed += 1 + 4 + 1
             elif isinstance(value, int):
