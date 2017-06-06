@@ -67,6 +67,9 @@ def generate_inserts(collection_name, num_docs, min_cols=1, max_cols=10, max_int
 			# if val_type == 0:
 			if True:
 				ival = random.randrange(-max_int + 1, max_int)
+
+				ival = abs(ival)
+
 				val = str(ival)
 				cur_ins_dict[('column' + str(col_num))] = ival
 			# dec

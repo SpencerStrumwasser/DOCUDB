@@ -46,10 +46,10 @@ def insert_test(collection_name, num_docs):
 	print '---------------------------\n********\n---------------------------'
 
 	if cmp(insert_dict, res_sel) == 0:
-		pass
+		print 'MATCH!'
 	else:
 		print 'mismatch'
 
-insert_test('test_collection', 1)
+insert_test('test_collection', 1000)
 
 
