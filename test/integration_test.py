@@ -13,9 +13,10 @@ p = myparser.Parser()
 
 
 def insert_test(collection_name, num_docs):
-	inserts = (generate_inserts(collection_name, num_docs, min_cols=1, max_cols=10, max_int=(2**31), max_dec=(2**31), max_str=10))
+	inserts = (generate_inserts(collection_name, num_docs, min_cols=1, max_cols=1, max_int=(10), max_dec=(2**31), max_str=10))
 	insert_str = inserts[0]
 	insert_dict = inserts [1]
+
 
 
 	del_qurey = 'drop ' + collection_name
@@ -28,6 +29,9 @@ def insert_test(collection_name, num_docs):
 	for line in insert_str.splitlines():
 		# print line
 		# print ''
+		print 'query to run:'
+		print line
+		print '----'
 		p.parse(line)
 
 		
