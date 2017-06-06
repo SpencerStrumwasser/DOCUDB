@@ -638,6 +638,8 @@ class StorageLayer:
                 print "meow", value
             elif val_type == 4:
                 value = eval(binary[i:i+val_size].rstrip('\0'))
+            elif val_type == 1:
+                value = float(binary[i:i+val_size].rstrip('\0'))
             else:
                 value = binary[i:i+val_size].rstrip('\0')
             i += val_size
@@ -689,6 +691,8 @@ class StorageLayer:
                 value = self.binaryList_to_doc_data(binary[i:i+val_size]).user_values
             elif val_type == 4:
                 value = eval(binary[i:i+val_size].rstrip('\0'))
+            elif val_type == 1:
+                value = float(binary[i:i+val_size].rstrip('\0'))
             elif(val_type == 3):
                 value = binary[i:i+val_size]
                 if int(value) == 1:
