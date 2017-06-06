@@ -83,7 +83,7 @@ def dic_list_cmp(lst1, lst2):
 	
 
 def insert_test(collection_name, num_docs):
-	inserts = (generate_inserts(collection_name, num_docs, min_cols=1, max_cols=1, max_int=10, max_dec=(2**31), max_str=2000))
+	inserts = (generate_inserts(collection_name, num_docs, min_cols=1, max_cols=1, max_int=10, max_dec=(2**31), max_str=1000))
 	insert_str = inserts[0]
 	insert_dict = inserts [1]
 
@@ -134,7 +134,6 @@ def insert_test(collection_name, num_docs):
 			print 'mismatch'
 			count += 1
 	return count
-
 
 num_docs = 1
 tests_failed = insert_test('test_collection', num_docs)

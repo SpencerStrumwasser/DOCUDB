@@ -71,13 +71,13 @@ def generate_inserts(collection_name, num_docs, min_cols=1, max_cols=10, max_int
 				cur_ins_dict[('column' + str(col_num))] = ival
 			# dec
 			# elif val_type == 1:
-			if False:
+			if True:
 				dval = random.randrange(-max_dec + 1, max_dec - 1) + random.random()
 				val = str(dval)
 				cur_ins_dict[('column' + str(col_num))] = dval
 			# string
 			# elif val_type == 2:
-			if True:
+			if False:
 				# sval = ''.join(random.choice(string.printable) for i in range(max_str)) # produces ugly strings
 				sval = ''.join(random.choice(string.digits+string.letters+'-_') for i in range(max_str))
 				val = '"' + sval + '"'
