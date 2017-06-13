@@ -86,7 +86,8 @@ update c_emb set [name] = ["CLONE"]
 select * from c_emb 
 
 
-
+Note on Comments:
+  There are some large swaths of commented out code - we decided to keep them there in case we need them in the future.
 
 Notes on Databse including restraints and picture of parsing tree if people are curious:
 https://docs.google.com/document/d/1FQ1Hc2AMHHdax1Fot6NV-0GvFYed6kyF3Xe6c5kFlQs/edit?usp=sharing
