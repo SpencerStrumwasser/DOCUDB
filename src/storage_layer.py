@@ -1218,7 +1218,7 @@ class StorageLayer:
 
     ## TODO: This function is defined twice (second time in myparser.py). oops
     def __create_embedded_doc(self, columns):
-         '''
+        '''
         This is a class that creates an embedded document by checking what the
         objects are an instance of and adding it to the document data class
         '''

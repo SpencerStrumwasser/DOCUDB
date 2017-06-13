@@ -1194,9 +1194,9 @@ class Parser:
 
 
     def __print_embed(self, num_embed, dicc):   
-    '''
-    function to provide recursive printing for embedded documents
-    ''' 
+        '''
+        function to provide recursive printing for embedded documents
+        ''' 
         for key in dicc:
             if key == '_key':
                 print "\t"*(num_embed+1), self.color.DARKCYAN + "Document Key:",  \
@@ -1300,7 +1300,7 @@ class Parser:
             
 
     def __upsert_storage_layer(self, filename):
-                '''
+        '''
         Translates the terminal command for upsert into a storage layer command.
         '''
         sl = StorageLayer(filename)
