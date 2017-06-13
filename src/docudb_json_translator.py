@@ -40,9 +40,9 @@ def json_to_dict(json_string):
 
     tokens = __lex(json_string)
 
-    print 'JSON!!!' # TODO DELETE
-    print tokens
-    print ''
+    # print 'JSON!!!' # TODO DELETE
+    # print tokens
+    # print ''
 
     if '' in tokens:
         print 'Json Lex error in docudb_json_translator.'
@@ -277,8 +277,8 @@ def __col_val(tokens, idx, cur_dict, is_embedded_doc_parse=False):
                 int_val = int(val_tok)
 
                 # 4 bytes -> 32 bits for storing int. 1 bit for +/-
-                if abs(int_val) >= 2**15:
-                    print 'LIST Error: int values range from (-2**15, 2**15). 32 bit storage space'
+                if abs(int_val) >= 2**31:
+                    print 'LIST Error: int values range from (-2**31, 2**31). 32 bit storage space'
                     raise BaseException # todo catch better
                     return
                 else:
@@ -379,8 +379,8 @@ def __col_val(tokens, idx, cur_dict, is_embedded_doc_parse=False):
 
         int_val = int(val_tok)
         # 4 bytes -> 32 bits for storing int. 1 bit for +/-
-        if abs(int_val) >= 2**15:
-            print 'JSON Error: int values range from (-2**15, 2**15). 32 bit storage space'
+        if abs(int_val) >= 2**31:
+            print 'JSON Error: int values range from (-2**31, 2**31). 32 bit storage space'
             cur_dict.clear()
             print inspect.currentframe().f_back.f_lineno
             return

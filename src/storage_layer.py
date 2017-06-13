@@ -635,7 +635,8 @@ class StorageLayer:
                 value = self.binary_to_doc_data(binary[i:i+val_size]).user_values_dict
             elif val_type == 6:
                 value = self.binaryList_to_doc_data(binary[i:i+val_size]).user_values
-                print "meow", value
+                value.sort()
+                # print "meow", value
             elif val_type == 4:
                 value = eval(binary[i:i+val_size].rstrip('\0'))
             elif val_type == 1:
@@ -689,6 +690,7 @@ class StorageLayer:
                 value = self.binary_to_doc_data(binary[i:i+val_size]).user_values_dict
             elif val_type == 6:
                 value = self.binaryList_to_doc_data(binary[i:i+val_size]).user_values
+                value.sort()
             elif val_type == 4:
                 value = eval(binary[i:i+val_size].rstrip('\0'))
             elif val_type == 1:
