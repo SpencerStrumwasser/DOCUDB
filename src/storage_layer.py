@@ -106,7 +106,7 @@ class StorageLayer:
 
     def search_memory_for_free(self, size):
         '''
-        TODO: method summary
+        Looks for the first possible free space it can find.
 
         input: size ->
         return ->
@@ -147,6 +147,9 @@ class StorageLayer:
 
 
     def convert_int(self,number):
+        '''
+        Conversts an int to binary
+        '''
         a = bin(number)[2:]
         b = len(a)
         first = 0
@@ -193,11 +196,12 @@ class StorageLayer:
 
     def write_data_to_memory(self, start, document):
         '''
-        todo: method summary
+        This writes all the data we have to memory.  It simply takes the start of
+        the data and then writes the document we give it.
 
-        input: start ->
-        input document ->
-        return ->
+        input: start -> start of write location
+        input document -> document data we are writing
+        return -> return true for sucess
         '''
 
         # todo: record filled_space
@@ -305,11 +309,11 @@ class StorageLayer:
 
     def write_list_to_memory(self, start, lis):
         '''
-        todo: method summary
+        same as write document, but for a list data type instead.
 
-        input: start ->
-        input document ->
-        return ->
+        input: start -> start of write location
+        input document -> list data we are writing
+        return -> return true for sucess
         '''
 
         # todo: record filled_space
@@ -484,13 +488,12 @@ class StorageLayer:
                     allocated = self.byte_to_int(allocated_temp)
                     if dirty == 1:
 
-                        # datakey = data[data_start + self.BOOLEAN_SIZE + 2 * self.INT_SIZE:data_start + self.BOOLEAN_SIZE + 2 * self.INT_SIZE + 30].rstrip('\0')
-                        # if datakey in keys:
                         f.seek(start)   
                         data_temp = f.read(allocated)
                     
                         
                         document_binary = data_temp
+                        #read data to evaluate predicate
                         doc_data = self.binary_to_doc_data(document_binary)
                         cols = doc_data.user_values_dict
                         if predicate_evaluator.eval_pred(exp, cols) == True:
@@ -570,6 +573,7 @@ class StorageLayer:
                         
                             
                             document_binary = data_temp
+                            #read in the data
                             doc_data = self.binary_to_doc_data_sel(document_binary)
                             ret.append(doc_data.user_values_dict)
 
@@ -584,6 +588,13 @@ class StorageLayer:
 
 
     def binary_to_doc_data(self, binary):
+        '''
+        Converts the binary data into a document so we can further change the
+        the data a document contains and rewrite it.
+
+        binary -> the section of data being read from
+        '''
+
         # TODO: update when we store datatypes 
         # as NOT alll strings
 
@@ -615,6 +626,7 @@ class StorageLayer:
         # print 'start data'
 
         i = 39
+        #go through all the data and start creating a document for it
         while(i < len(binary)):
             if binary[i] == '\0':
                 break
@@ -646,7 +658,6 @@ class StorageLayer:
                 valuetemp = self.binaryList_to_doc_data(binary[i:i+val_size]).user_values
                 valuetemp.sort()
                 value = self.__create_list(valuetemp)
-                # print "meow", value
             elif val_type == 4:
                 value = eval(binary[i:i+val_size].rstrip('\0'))
             elif val_type == 1:
@@ -664,6 +675,11 @@ class StorageLayer:
 
 
     def binary_to_doc_data_sel(self, binary):
+        '''
+        Reads in the binary data and converts it document form, however
+        list and embedded documents are lefts as lists and dictionaries
+        for ease of printing
+        '''
         # TODO: update when we store datatypes 
         # as NOT alll strings
 
@@ -742,6 +758,9 @@ class StorageLayer:
 
 
     def binaryList_to_doc_data(self, binary):
+        '''
+        reading in the binary list and converts it into list form
+        '''
         # TODO: update when we store datatypes 
         # as NOT alll strings
 
@@ -802,6 +821,18 @@ class StorageLayer:
 
 
     def update_by_keys(self, keys, columns, news, insert_flag):
+        '''
+        updates tupples in file based on the passed in list of keys
+
+         
+        keys -> list of keys gettings updated
+        
+        exp -> predicate in where
+        columns -> list of cols
+        news -> list of new values
+        insert_flag -> 1 for upsert, 0 for update
+
+        '''
         with open(self.filename, 'r+b') as f:
             start = 0
             end = start + self.read_size
@@ -1187,7 +1218,10 @@ class StorageLayer:
 
     ## TODO: This function is defined twice (second time in myparser.py). oops
     def __create_embedded_doc(self, columns):
-
+         '''
+        This is a class that creates an embedded document by checking what the
+        objects are an instance of and adding it to the document data class
+        '''
         file_to_insert = document.DocumentData(0,0, columns['_key'])
         memory_needed = 39
         for key, value in columns.iteritems():
@@ -1238,7 +1272,10 @@ class StorageLayer:
 
     ## TODO: This function is defined twice(second time in myparser.py). oops
     def __create_list(self, columns):
-
+        '''
+        This is a class that creates an embedded list by checking what the
+        objects are an instance of and adding it to the list data class
+        '''
         file_to_insert = listdata.ListData(0,0)
         memory_needed = 9
         for value in columns:
