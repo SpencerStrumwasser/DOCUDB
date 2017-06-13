@@ -40,7 +40,13 @@ def eval_pred(exp, cols):
 	# TODO: add exception handling and security checks
 	if exp == '' or exp == None:
 		return True
-	return eval(exp, {}, cols)
+
+	try:
+		return eval(exp, {}, cols)
+	except:
+		print 'Warning: a column from the where exp is not in this document'
+		return False
+
 
 
 
