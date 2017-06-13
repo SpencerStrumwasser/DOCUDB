@@ -174,8 +174,21 @@ def update_test(collection_name, num_docs):
 
 
 		p.parse(update_query)
+		query_res = p.parse('select * from test_collection')
 
 		# compare results
+		query_res.sort()
+		new_insert_dict.sort()
+
+		if cmp(query_res, new_insert_dict) == 0:
+			print 'Success ' + str(i)
+		else:
+			print 'Err'
+
+
+
+			mismatch_ct += 1
+
 
 		i += 1
 
