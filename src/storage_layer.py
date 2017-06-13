@@ -2,6 +2,7 @@ import os
 import document
 import predicate_evaluator
 import listdata
+# import sys
 
 
 # TODO: maybe make a static class. seems unecesary and waste of space to make new instanece for each new filename
@@ -268,8 +269,12 @@ class StorageLayer:
                     f.write(str(chr(b)))
                     f.write(str(chr(a)))
                     start += values[key].val_size
-                
-
+                elif values[key].val_type == 3:
+                    if values[key].val:
+                        f.write('1')
+                    else:
+                        f.write('0')
+                    start += values[key].val_size
                 elif values[key].val_type == 0:       
                     f.write(str(values.val))
                     start += values[key].val_size
@@ -366,7 +371,11 @@ class StorageLayer:
                     f.write(str(chr(b)))
                     f.write(str(chr(a)))
                     start += val.val_size
-
+                elif val.val_type == 3:
+                    if val.val:
+                        f.write('1')
+                    else:
+                        f.write('0')
                 elif val.val_type == 5:
                     self.write_data_to_memory(start, val.val)
                     start += val.val_size 
@@ -562,7 +571,7 @@ class StorageLayer:
                         
                             
                             document_binary = data_temp
-                            doc_data = self.binary_to_doc_data(document_binary)
+                            doc_data = self.binary_to_doc_data_sel(document_binary)
                             ret.append(doc_data.user_values_dict)
 
                     if len(keys) == 0:
@@ -632,7 +641,88 @@ class StorageLayer:
                 else:
                     value = False
             elif val_type == 5:
+                valuetemp = self.binary_to_doc_data(binary[i:i+val_size]).user_values_dict
+                value = self.__create_embedded_doc(valuetemp)
+            elif val_type == 6:
+                valuetemp = self.binaryList_to_doc_data(binary[i:i+val_size]).user_values
+                valuetemp.sort()
+                value = self.__create_list(valuetemp)
+                # print "meow", value
+            elif val_type == 4:
+                value = eval(binary[i:i+val_size].rstrip('\0'))
+            elif val_type == 1:
+                value = float(binary[i:i+val_size].rstrip('\0'))
+            else:
+                value = binary[i:i+val_size].rstrip('\0')
+            i += val_size
+            
+            ret.add_value(col_name, col_name_len, val_type, val_size, value)
+
+
+        return ret
+
+
+
+
+    def binary_to_doc_data_sel(self, binary):
+        # TODO: update when we store datatypes 
+        # as NOT alll strings
+
+        # print '--------'
+        # print binary
+        # print '--------'
+
+        # TODO: .rstrip('\0') will not be neccesary once data is stored in 
+        # binary format
+
+        is_filled = bool(binary[0])
+        allocated_temp = binary[1:5]
+        allocated = self.byte_to_int(allocated_temp)
+        filled_temp = binary[5:9]
+        filled = self.byte_to_int(filled_temp)
+        key_name = str(binary[9:39]).rstrip('\0')
+
+        # print 'is_filled: ' , is_filled
+        # print 'allocated: ' , allocated
+        # print 'filled: ' , filled
+        # print 'key_name: ' , key_name
+
+
+        ret = document.DocumentData(allocated, filled, key_name)
+
+# | 1B - col name length | 1~255B - col name | 1B - value type | 4B - value size| ?B - value|
+
+        # print binary
+        # print 'start data'
+
+        i = 39
+        while(i < len(binary)):
+            if binary[i] == '\0':
+                break
+
+            col_name_len = int(bin(ord(binary[i])),2)
+            i += 1
+            col_name = binary[i:i+col_name_len]
+            i += col_name_len
+            val_type = int(bin(ord(binary[i])),2)
+            i += 1
+            val_size = self.byte_to_int(binary[i:i+4])
+            i += 4
+            if(val_type == 0):
+                flag = binary[i]
+
+                value = self.byte_to_int(binary[i+1:i+val_size])
+                if int(flag) == 1:
+                    value = -value
+            elif(val_type == 3):
+                value = binary[i:i+val_size]
+                if int(value) == 1:
+                    value = True
+                else:
+                    value = False
+            elif val_type == 5:
                 value = self.binary_to_doc_data(binary[i:i+val_size]).user_values_dict
+                
             elif val_type == 6:
                 value = self.binaryList_to_doc_data(binary[i:i+val_size]).user_values
                 value.sort()
@@ -649,7 +739,6 @@ class StorageLayer:
 
 
         return ret
-
 
 
 
@@ -687,10 +776,12 @@ class StorageLayer:
                 if int(flag) == 1:
                     value = -value
             elif val_type == 5:
-                value = self.binary_to_doc_data(binary[i:i+val_size]).user_values_dict
+                valuetemp = self.binary_to_doc_data(binary[i:i+val_size]).user_values_dict
+                value = self.__create_embedded_doc(valuetemp)
             elif val_type == 6:
-                value = self.binaryList_to_doc_data(binary[i:i+val_size]).user_values
-                value.sort()
+                valuetemp = self.binaryList_to_doc_data(binary[i:i+val_size]).user_values
+                valuetemp.sort()
+                value = self.__create_list(valuetemp)
             elif val_type == 4:
                 value = eval(binary[i:i+val_size].rstrip('\0'))
             elif val_type == 1:
@@ -1001,7 +1092,7 @@ class StorageLayer:
                                 # if exceed current allocation, double allocation in documentData object,
                                 # then delete current block in memory, and write to a new block.
                                 for ite in range(10, 26):
-                                    if (doc_data.filled < 2**ite):
+                                    if (doc_data.filled_size < 2**ite):
                                         break
                                 if ite == 25:
                                     print ("Document is now Too Big - Document Unchanged")
@@ -1011,7 +1102,7 @@ class StorageLayer:
                                 f.seek(start)
                                 f.write('0')
 
-                                new_size = self.search_memory_for_free(doc_data.allocated)
+                                new_size = self.search_memory_for_free(doc_data.allocated_size)
                                 self.write_data_to_memory(new_size, doc_data)
 
                             else:
@@ -1067,7 +1158,7 @@ class StorageLayer:
                     
                         
                         document_binary = data_temp
-                        doc_data = self.binary_to_doc_data(document_binary)
+                        doc_data = self.binary_to_doc_data_sel(document_binary)
                         cols = doc_data.user_values_dict
                         if predicate_evaluator.eval_pred(exp, cols) == True:
                             ret.append(doc_data.user_values_dict)
@@ -1098,7 +1189,7 @@ class StorageLayer:
     ## TODO: This function is defined twice (second time in myparser.py). oops
     def __create_embedded_doc(self, columns):
 
-        file_to_insert = DocumentData(0,0, columns['_key'])
+        file_to_insert = document.DocumentData(0,0, columns['_key'])
         memory_needed = 39
         for key, value in columns.iteritems():
             insert_key = str(key)
@@ -1115,11 +1206,15 @@ class StorageLayer:
                 file_to_insert.add_value(insert_key, col_size, 2, value_size, value)
                 memory_needed += 1 + value_size + 4
             elif isinstance(value, bool):
+                if value:
+                    value = 1
+                else:
+                    value = 0
                 file_to_insert.add_value(insert_key, col_size, 3, 1, value)
                 memory_needed += 1 + 4 + 1
             elif isinstance(value, int):
-                file_to_insert.add_value(insert_key, col_size, 0, 4, value)
-                memory_needed += 1 + 4 + 4
+                file_to_insert.add_value(insert_key, col_size, 0, 5, value)
+                memory_needed += 1 + 4 + 5
             elif isinstance(value, float):
                 value_size = len(str(value))
                 file_to_insert.add_value(insert_key, col_size, 1, value_size, str(value))
@@ -1145,7 +1240,7 @@ class StorageLayer:
     ## TODO: This function is defined twice(second time in myparser.py). oops
     def __create_list(self, columns):
 
-        file_to_insert = ListData(0,0)
+        file_to_insert = listdata.ListData(0,0)
         memory_needed = 9
         for value in columns:
             if isinstance(value, tuple):
@@ -1157,11 +1252,16 @@ class StorageLayer:
                 file_to_insert.add_value(2, value_size, value)
                 memory_needed += 1 + value_size + 4
             elif isinstance(value, bool):
+                if value:
+                    value = 1
+                else:
+                    value = 0
                 file_to_insert.add_value(3, 1, value)
                 memory_needed += 1 + 4 + 1
             elif isinstance(value, int):
-                file_to_insert.add_value(0, 4, value)
-                memory_needed += 1 + 4 + 4
+                file_to_insert.add_value(0, 5, value)
+                memory_needed += 1 + 4 + 5
+
             elif isinstance(value, float):
                 value_size = len(str(value))
                 file_to_insert.add_value(1, value_size, str(value))
@@ -1178,7 +1278,6 @@ class StorageLayer:
                 memory_needed += 1 + value_size + 4
         file_to_insert.allocated_size = memory_needed
         # print file_to_insert.allocated_size
-        print "fuck this shit MOTHERF", file_to_insert.user_values
         return file_to_insert
 
 

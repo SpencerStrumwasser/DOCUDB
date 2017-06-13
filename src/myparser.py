@@ -2,6 +2,7 @@ import document
 from document import DocumentData
 from storage_layer import StorageLayer
 from listdata import ListData
+# import sys
 
 import docudb_json_translator
 import docudb_update_translator
@@ -257,6 +258,8 @@ class Parser:
         ## todo: before calling storage layer, check if self.command.invalid == True
         # todo call storage layer? 
         self.__process_cmd()
+
+
         return self.__call_storage_layer()
 
 
@@ -885,17 +888,13 @@ class Parser:
             if len(upd_dict['update_dict']) != 0: # len 0 signals an error occurred 
                 self.command.update = upd_dict['update_dict']
                 self.command.temp_cols = upd_dict['cols']
-                self.command.temp_vals = upd_dict['vals']
+                self.command.temp_vals = eval(self.command.temp_vals)
             else:
                 self.command.invalid = True
                 print 'Error in update format'
                 return 
 
-            # todo delete
-            print 'the update dict:'
-            print self.command.update
-            print ''
-            #
+
 
         # TODO: probably cannot check this
         # All expressions with 2 or more elements enclosed with ()

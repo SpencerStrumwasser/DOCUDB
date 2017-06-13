@@ -65,8 +65,7 @@ def generate_inserts(collection_name, num_docs, min_cols=1, max_cols=10, max_int
 		num_cols = random.randrange(min_cols, max_cols+1)
 		for col_num in range(num_cols):
 
-			val_type = random.randrange(0, NUM_DATATYPES)
-			# val_type = 6
+			val_type = random.randrange(0, NUM_DATATYPES+1)
 
 
 

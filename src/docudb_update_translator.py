@@ -2,7 +2,6 @@ from keywords import LANGUAGE_KEYWORDS
 from keywords import OPERATORS
 from keywords import WORD_OPERATORS
 
-
 INT_SIZE = 4 # from storage layer. TODO: put this in one unified place
 
 '''
