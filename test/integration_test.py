@@ -113,7 +113,7 @@ def insert_test(collection_name, num_docs):
 
 
 def delete_test(collection_name, num_docs):
-	inserts = (generate_inserts(collection_name, num_docs, min_cols=5, max_cols=10, max_int=100000, max_dec=.000001, max_str=10))
+	inserts = (generate_inserts(collection_name, num_docs, min_cols=5, max_cols=10, max_int=100000, max_dec=.000001, max_str=3333))
 	insert_str = inserts[0]
 	insert_dict = inserts [1]
 
@@ -207,6 +207,7 @@ def delete_test(collection_name, num_docs):
 				print '---------------------------\n********\n---------------------------'
 				print 'mismatch'
 				count += 1
+	count += len(insert_dict) - len(res_sel)
 	return count
 
 
@@ -219,7 +220,7 @@ def delete_test(collection_name, num_docs):
 
 
 
-num_docs = 100
+num_docs = 200
 tests_failed = insert_test('test_collection', num_docs)
 
 print str(tests_failed) + " Total Insertions mismatched out of " + str(num_docs)
