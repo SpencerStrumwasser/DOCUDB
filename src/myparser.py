@@ -972,6 +972,9 @@ class Parser:
     ######################################################################
     ######################################################################
     class color:
+        ''' 
+        This is a simple class to provide us with colors for output
+        '''
         PURPLE = '\033[95m'
         CYAN = '\033[96m'
         DARKCYAN = '\033[36m'
@@ -989,6 +992,10 @@ class Parser:
 
     ## TODO: This function is defined twice (second time in storage_layer.py). oops
     def __create_embedded_doc(self, columns):
+        '''
+        This is a class that creates an embedded document by checking what the
+        objects are an instance of and adding it to the document data class
+        '''
 
         file_to_insert = DocumentData(0,0, columns['_key'])
         memory_needed = 39
@@ -1040,6 +1047,11 @@ class Parser:
 
     ## TODO: This function is defined twice(second time in storage_layer.py). oops
     def __create_list(self, columns):
+        '''
+        This is a class that creates an embedded list by checking what the
+        objects are an instance of and adding it to the list data class
+        '''
+
 
         file_to_insert = ListData(0,0)
         memory_needed = 9
@@ -1087,7 +1099,11 @@ class Parser:
 
 
     def __insert_storage_layer(self, filename):
-
+        '''
+        This is the class that creates the document to be inserted into the storage layer.
+        It does this by taking in the filename and then creating the document with the 
+        command data we gave it.  This document then gets called by storage layer.
+        '''
         sl = StorageLayer(filename)
         print self.command.insert_key_name
         file_to_insert = DocumentData(0,0, self.command.insert_key_name)
@@ -1142,6 +1158,11 @@ class Parser:
         sl.write_data_to_memory(sl.search_memory_for_free(file_to_insert), file_to_insert)
 
     def __printer(self, dicc, item, num_embed):
+        '''
+        This is a function to provide us with a reasonable output in the terminal in order
+        to see what the document contains.  It is not the prettiest, but it gets the job
+        done well enough.
+        '''
         if isinstance(dicc[item], tuple):
             print "\t"*num_embed, self.color.CYAN + item + self.color.END,": ", \
                 self.color.CYAN + "Reference Document" + self.color.END
@@ -1171,7 +1192,10 @@ class Parser:
 
 
 
-    def __print_embed(self, num_embed, dicc):    
+    def __print_embed(self, num_embed, dicc):   
+        '''
+        function to provide recursive printing for embedded documents
+        ''' 
         for key in dicc:
             if key == '_key':
                 print "\t"*(num_embed+1), self.color.DARKCYAN + "Document Key:",  \
@@ -1186,6 +1210,9 @@ class Parser:
 
 
     def __print_select(self, gettt):
+        '''
+        function to provide a reasonable printing for all the documents.
+        '''
         if gettt == False:
             print "No Documents Exists"
         else:
@@ -1210,7 +1237,7 @@ class Parser:
                     for item in proj:
                         if item != "_key":
                             try:
-                                self.__printer(dicc, item)
+                                self.__printer(dicc, item, 0)
                             except KeyError:
                                 try:
                                     print predicate_evaluator.eval_pred(item, dicc, 0)
@@ -1221,6 +1248,9 @@ class Parser:
 
 
     def __select_storage_layer(self, filename):
+        '''
+        Translates the terminal command for select into a storage layer command.
+        '''
 
         sl = StorageLayer(filename)
         if self.command.predicate == None:
@@ -1246,6 +1276,9 @@ class Parser:
 
 
     def __update_storage_layer(self, filename):
+        '''
+        Translates the terminal command for update into a storage layer command.
+        '''
 
         sl = StorageLayer(filename)
         if self.command.predicate == None:
@@ -1266,7 +1299,9 @@ class Parser:
             
 
     def __upsert_storage_layer(self, filename):
-
+        '''
+        Translates the terminal command for upsert into a storage layer command.
+        '''
         sl = StorageLayer(filename)
         if self.command.predicate == None:
             print "Upserting All Documents"
@@ -1286,7 +1321,9 @@ class Parser:
     
 
     def __delete_storage_layer(self, filename):
-
+        '''
+        Translates the terminal command for delete into a storage layer command.
+        '''
         sl = StorageLayer(filename)
         if self.command.predicate == None:
              print "Deleting all documents"
@@ -1305,6 +1342,9 @@ class Parser:
         sl.delete_by_predicate(self.command.projection, self.command.predicate)
  
     def __drop_storage_layer(self, filename):
+        '''
+        Translates the terminal command for drop into a storage layer command.
+        '''
         sl = StorageLayer(filename)
         sl.drop_table()
 
