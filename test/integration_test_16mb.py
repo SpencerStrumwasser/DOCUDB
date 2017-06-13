@@ -6,9 +6,11 @@ sys.path.insert(0, '../src/')
 
 import myparser
 import random
+import string
 
 p = myparser.Parser()
 
+sys.setrecursionlimit(1500) # for many cols, we hit the recursion limit.
 
 
 # For pluggin into expression only
@@ -62,6 +64,143 @@ def create_rand_val():
 		return {'val' : ret, 'query_val' : ('"' + str(ret) + '"')}
 
 
+def update_test(collection_name, num_docs):
+	'''
+	Tests updates by generating a randomly filled DB table and running queries 
+	against it. 
+	'''
+
+	mismatch_ct = 0
+
+	inserts = (generate_inserts(collection_name, num_docs, min_cols=100, max_cols=100, max_int=10, max_dec=(2**31), max_str=80000))
+	insert_str = inserts[0]
+	insert_dict = inserts [1]	
+
+	sys.stdout = open(os.devnull, "w")
+
+	del_qurey = 'drop ' + collection_name
+	p.parse(del_qurey)
+
+	creation_qurey = 'create ' + collection_name
+	p.parse(creation_qurey)
+	sys.stdout = sys.__stdout__
+
+	ccc = 0
+
+	# Write data to test-collection
+	for line in insert_str.splitlines():
+		sys.stdout = open(os.devnull, "w")
+		p.parse(line)
+		sys.stdout = sys.__stdout__
+
+		if ccc % 30 == 0:
+
+			print 'parse ' + str(ccc) + '/' + str(num_docs)
+
+		ccc += 1
+
+
+	# Test Update, run 20 test queries
+	i = 0
+	while i < 20:
+
+		# Col in wher exp
+		rand_doc = random.choice(insert_dict)
+		rand_col = random.choice(rand_doc.keys())
+		for _ in range(100):
+			rand_col = random.choice(rand_doc.keys())
+			if rand_col != '_key': # not sure why it runs forever sometimes
+				break
+
+				
+		rand_val = rand_doc[rand_col]
+		rand_val_qq = convert_val_to_query_val(rand_val)
+		if rand_val_qq == None: # we got a doc or list
+			continue
+		rand_val_q = rand_val_qq['query_val']
+
+		# Col being updated
+		rand_col_to_set = random.choice(rand_doc.keys())
+		for _ in range(100):
+			rand_col_to_set = random.choice(rand_doc.keys())
+			if rand_col_to_set != '_key': # not sure why it runs forever sometimes
+				break
+
+		rand_val_to_set = create_rand_val()
+
+
+		# update <collection_name> set [<rand_col_to_set>] = <>
+
+		# Apply query to insert_dict
+		new_insert_dict = []
+		for docc in insert_dict:
+			pred_eval = None
+			if rand_col in docc:
+				if docc[rand_col] == rand_val_qq['val']:
+					pred_eval = True
+				else:
+					pred_eval = False
+			else:
+				pred_eval = False
+
+			# print 'checking ' + str(docc[rand_col]) + ' and ' + str(rand_val_qq['val']) + ' equality'
+			# print pred_eval
+
+			if pred_eval:
+				if rand_col_to_set in docc: # For updates, do not do anything if column to update DNE
+					docc[rand_col_to_set] = rand_val_to_set['val']
+
+			new_insert_dict.append(docc)
+
+		# Apply query to actual database
+		update_query = 'update ' + str(collection_name) + ' set ' + '[' + str(rand_col_to_set) + '] = [' +  str(rand_val_to_set['query_val']) + '] where ( ' + rand_col + ' == ' + rand_val_qq['query_val'] + ') '
+
+		mismatch_query = 0
+
+
+		sys.stdout = open(os.devnull, "w")
+		p.parse(update_query)
+		query_res = p.parse('select * from test_collection')
+		sys.stdout = sys.__stdout__
+
+		# compare results
+		query_res.sort()
+		new_insert_dict.sort()
+		if len(query_res) != len(new_insert_dict):
+			mismatch_query = 1
+		else:
+			for doc_i in range(len(query_res)):
+				# print 'actual'
+				# print query_res
+				# print 'expect'
+				# print new_insert_dict
+
+				# print '\n'
+
+
+				if cmp(query_res[doc_i], new_insert_dict[doc_i]) == 0:
+					print 'Success: update query ' + str(i) + ', document ' + str(doc_i)
+				else:
+					mismatch_query = 1
+					print update_query
+					print 'Mismatch: '
+					print 'Expected: '
+					query_res[doc_i].keys()
+					# print '\t' + str(new_insert_dict[doc_i])
+					print 'Actual:'
+					new_insert_dict[doc_i].keys()
+					# print '\t' + str(query_res[doc_i])
+
+			
+
+		mismatch_ct += mismatch_query
+		i += 1
+
+
+	return mismatch_ct
+
+
+
 
 def upsert_test(collection_name, num_docs):
 	'''
@@ -70,8 +209,7 @@ def upsert_test(collection_name, num_docs):
 	'''
 
 	mismatch_ct = 0
-
-	inserts = (generate_inserts(collection_name, num_docs, min_cols=1, max_cols=2, max_int=100000, max_dec=.000001, max_str=3))
+	inserts = (generate_inserts(collection_name, num_docs, min_cols=100, max_cols=100, max_int=10, max_dec=(2**31), max_str=80000))
 	insert_str = inserts[0]
 	insert_dict = inserts [1]	
 
@@ -255,7 +393,7 @@ def insert_test(collection_name, num_docs):
 
 
 def delete_test(collection_name, num_docs):
-	inserts = (generate_inserts(collection_name, num_docs, min_cols=5, max_cols=10, max_int=100000, max_dec=.000001, max_str=100000))
+	inserts = (generate_inserts(collection_name, num_docs, min_cols=100, max_cols=100, max_int=10, max_dec=(2**31), max_str=100000))
 	insert_str = inserts[0]
 	insert_dict = inserts [1]
 
@@ -353,7 +491,9 @@ def delete_test(collection_name, num_docs):
 	return count
 
 
-
+sys.stdout = open(os.devnull, "w")
+p.parse('drop test_collection')
+sys.stdout = sys.__stdout__
 
 total_errs = 0
 
@@ -368,13 +508,13 @@ tests_failed = delete_test('test_collection', num_docs)
 print " Total Deletions errors: " + str(tests_failed)
 total_errs += tests_failed
 
-tests_failed = update_test('test_collection' , 10)
+tests_failed = update_test('test_collection' , 3)
 
 print "Total Update errors: " + str(tests_failed)
 total_errs += tests_failed
 
 
-tests_failed = upsert_test('test_collection' , 10)
+tests_failed = upsert_test('test_collection' , 3)
 
 print "Total Upsert errors: " + str(tests_failed)
 total_errs += tests_failed
@@ -385,4 +525,7 @@ if total_errs == 0:
 else:
 	print str(total_errs) + ' total errors found.'
 
+sys.stdout = open(os.devnull, "w")
+p.parse('drop test_collection')
+sys.stdout = sys.__stdout__
 

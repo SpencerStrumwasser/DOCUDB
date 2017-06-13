@@ -539,8 +539,9 @@ def delete_test(collection_name, num_docs):
 
 
 
-
-
+sys.stdout = open(os.devnull, "w")
+p.parse('drop test_collection')
+sys.stdout = sys.__stdout__
 
 
 total_errs = 0
@@ -573,8 +574,9 @@ if total_errs == 0:
 else:
 	print str(total_errs) + ' total errors found.'
 
-
-
+sys.stdout = open(os.devnull, "w")
+p.parse('drop test_collection')
+sys.stdout = sys.__stdout__
 
 
 
