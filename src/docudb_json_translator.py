@@ -40,9 +40,9 @@ def json_to_dict(json_string):
 
     tokens = __lex(json_string)
 
-    print 'JSON!!!' # TODO DELETE
-    print tokens
-    print ''
+    # print 'JSON!!!' # TODO DELETE
+    # print tokens
+    # print ''
 
     if '' in tokens:
         print 'Json Lex error in docudb_json_translator.'

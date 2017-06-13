@@ -873,9 +873,9 @@ class Parser:
                 return 
 
             # todo delete
-            print 'the insert json:'
-            print self.command.json_doc
-            print ''
+            # print 'the insert json:'
+            # print self.command.json_doc
+            # print ''
             #
 
         # Process self.command.update if necessary - update/upsert

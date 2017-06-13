@@ -54,6 +54,10 @@ def generate_inserts(collection_name, num_docs, min_cols=1, max_cols=10, max_int
 
 	# Each document
 	for doc_num in range(num_docs):
+		if doc_num % 100 == 0:
+			print 'doc ' + str(doc_num) + '/' + str(num_docs) + ' created..'
+
+
 		cur_ins_query = 'insert into ' + collection_name + ' "key' + str(doc_num) + '" {'
 		cur_ins_dict = {'_key' : ('key' + str(doc_num))}
 
@@ -62,13 +66,13 @@ def generate_inserts(collection_name, num_docs, min_cols=1, max_cols=10, max_int
 		for col_num in range(num_cols):
 
 			val_type = random.randrange(0, NUM_DATATYPES)
-			val_type = 4
+			# val_type = 6
 
 
 
 			val = ''
 			
-			def __base_type(val_type, cur_ins_dict):
+			def __base_type(val_type, cur_ins_dict, col_num):
 				# int 
 				if val_type == 0:
 				# if False:
@@ -101,7 +105,7 @@ def generate_inserts(collection_name, num_docs, min_cols=1, max_cols=10, max_int
 					return val
 
 			if val_type in [0,1,2,3]:
-				val = __base_type(val_type, cur_ins_dict)
+				val = __base_type(val_type, cur_ins_dict, col_num)
 			
 			# embedded Doc
 			elif val_type == 4:
@@ -117,7 +121,7 @@ def generate_inserts(collection_name, num_docs, min_cols=1, max_cols=10, max_int
 				num_subcols = random.randrange(min_cols, max_cols+1)
 				for sub_col_num in range(num_subcols):
 					sub_val_type = random.randrange(0, 4)
-					sub_val = __base_type(sub_val_type, sub_cur_ins_dict)
+					sub_val = __base_type(sub_val_type, sub_cur_ins_dict, sub_col_num)
 
 					val += 'column' + str(sub_col_num) + ' : ' + sub_val + ', '
 
@@ -129,11 +133,34 @@ def generate_inserts(collection_name, num_docs, min_cols=1, max_cols=10, max_int
 
 			# reference Doc
 			elif val_type == 5:
-				pass
+				collec = ''.join(random.choice(string.digits+string.letters+'-_') for i in range(20))
+				keyname = ''.join(random.choice(string.digits+string.letters+'-_') for i in range(20))
+				val = '<' + collec + ',' + keyname + '>'
+				cur_ins_dict[('column' + str(col_num))] = (collec, keyname)
 
 			# list
 			elif val_type == 6:
-				pass
+				val = '['
+
+				emb_lst = {}
+
+				lst_val = '' # string repr of elements of list
+
+				num_lst_elems = random.randrange(min_cols, max_cols+1)
+				for i in range(num_lst_elems):
+					sub_val_type = random.randrange(0, 4)
+					sub_val = __base_type(sub_val_type, emb_lst, i)
+
+					val += sub_val + ', '
+
+				emb_lst = emb_lst.values()
+				emb_lst.sort()
+
+				val = val[:-2]
+				val += ']'
+
+
+				cur_ins_dict[('column' + str(col_num))] = emb_lst[:]
 
 
 			cur_ins_query += 'column' + str(col_num) + ' : ' + val + ', '
@@ -159,6 +186,6 @@ def generate_inserts(collection_name, num_docs, min_cols=1, max_cols=10, max_int
 
 if __name__ == '__main__':
 	r = generate_inserts('test_collection', 2, min_cols=1, max_cols=10, max_int=(2**31), max_dec=(2**31), max_str=10)
-	print r[0]
+	# print r[0]
 
 
