@@ -1238,7 +1238,7 @@ class Parser:
                     for item in proj:
                         if item != "_key":
                             try:
-                                self.__printer(dicc, item)
+                                self.__printer(dicc, item, 0)
                             except KeyError:
                                 try:
                                     print predicate_evaluator.eval_pred(item, dicc, 0)
