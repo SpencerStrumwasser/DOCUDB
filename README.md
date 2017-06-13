@@ -33,6 +33,7 @@ Example queries to run:
 create collection1
 
 insert into collection1 "id1234" {name:"Ethan",age:20.888,cool  :true ,children :6   }
+
 insert into collection1 "id1235" {name:"Specer",age:25.888,cool  :true ,children :100 , wives : "at least 23"   }
 
 
@@ -66,10 +67,15 @@ drop c_emb
 create c_emb
 
 Embedded Document special syntax:
+
 insert into c_emb "id1" {name: "joe", child : {_key : "sid1", name : "Jonny", age : 3}, pay : 90000} 
+
 Reference Document special syntax:
+
 insert into c_emb "id2" {name: "dick", child : <c_emb, child1>, pay : 90000} 
+
 List Special Syntax:
+
 insert into c_emb "id3" {name: "joe", children: [{_key : "sid1", name : "Jonny", age : 3}, {_key : "sid2", name : "Jon", age : 6}, 666], pay : 90000} 
 
 
@@ -80,7 +86,8 @@ update c_emb set [name] = ["CLONE"]
 select * from c_emb 
 
 
-
+Note on Comments:
+  There are some large swaths of commented out code - we decided to keep them there in case we need them in the future.
 
 Notes on Databse including restraints and picture of parsing tree if people are curious:
 https://docs.google.com/document/d/1FQ1Hc2AMHHdax1Fot6NV-0GvFYed6kyF3Xe6c5kFlQs/edit?usp=sharing
