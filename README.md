@@ -7,12 +7,14 @@ Prerequisites for Running: Python 2.7.1
 Summary of Project:
   This Project dealt with creating a document-oriented databse from scratch.  Everything in this repository was written by either Spencer or Ethan, including the parser.  We wanted to learn how to create a NoSQL database since we only ever worked with SQL databases in the past.  This database supports all of the operations of CRUD (Creation, Reading, Update, Deletion) and even supports where statements.  This project is the combined efforts of two Junior CS majors in a single term, from initial idea to final product.  It was not an easy task, but one that we are proud of because of that.
   
+  This project allows people to create different collections of documents and insert, change and delete documents currently stored in the collection.  The language is something we created ourselves loosely based off SQL, and takes commands such as where, select, update, upsert and delete.  This program can be interacted with through the terminal in order to see how it works, storing data in a format we created ourselves.  There are example queries below to see how the database works.
 
 How To Use:
 
   Run Tests:
     In a terminal, go to the test directory, and type: python integration_test.py
     The tests should start running and printing either success or failure
+    There is also tests for 16 mb files, to run type: python integration_test_16mb.py
     
   Run Manually Inputted Queries:
     In a terminal, go to src directiory, and type: python terminal.py
@@ -62,6 +64,7 @@ delete * from collection1 where (_key == "id1234")
 drop collection1
 
 
+Non-standard syntax cases for embedded documents, lists and referential documents.
 
 drop c_emb
 create c_emb
